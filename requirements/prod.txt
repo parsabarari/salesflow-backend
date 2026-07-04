@@ -1,0 +1,9 @@
+-r base.txt
+
+# WSGI server for the `web` service (docs/06-architecture.md §6 —
+# web is the only horizontally-scalable service)
+gunicorn==23.0.0
+
+# Structured request logging fields (org_id, latency, status code —
+# docs/06-architecture.md §7 minimum observability requirement)
+python-json-logger==2.0.7

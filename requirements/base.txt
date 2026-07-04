@@ -1,0 +1,41 @@
+# Core framework — fixed stack per docs/01-product-requirements.md §7
+django >6.0,<6.1
+djangorestframework==3.15.2
+
+# Auth: JWT access/refresh pair with Redis-backed refresh blocklist
+# (docs/02-business-rules.md §2.1-2.2, docs/06-architecture.md §1)
+djangorestframework-simplejwt==5.3.1
+
+# Postgres driver
+psycopg[binary]==3.2.3
+
+# citext extension support (Membership/User email case-insensitive
+# uniqueness, docs/04-erd.md uses `citext` throughout)
+django-citext==1.0.3
+
+# Filtering/ordering query params (docs/05-api-spec.md §1.4)
+django-filter==24.3
+
+# OpenAPI schema generation — required by docs/01-product-requirements.md
+# §7 NFR "OpenAPI docs". drf-spectacular chosen over drf-yasg: it's the
+# actively-maintained option and generates OpenAPI 3.x (drf-yasg is
+# effectively unmaintained and OpenAPI 2.0-era).
+drf-spectacular>=0.28,<1.0
+
+# Background jobs: transactional email, due/overdue sweep, invitation
+# expiry sweep (docs/06-architecture.md §3)
+celery==5.5
+redis==5.1.1
+django-celery-beat>=2.7,<3
+
+# Object storage for Attachments — S3-compatible, MinIO locally
+# (docs/06-architecture.md §2)
+django-storages[s3]==1.14.4
+
+# CORS — required because the frontend is a separate application
+# (docs/01-product-requirements.md §1 Vision) making cross-origin
+# requests to this API.
+django-cors-headers==4.4.0
+
+# .env file loading for the settings split (config/settings/base|dev|prod.py)
+django-environ==0.11.2

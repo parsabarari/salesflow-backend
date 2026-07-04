@@ -1,0 +1,20 @@
+-r base.txt
+
+# Testing — this is the tooling decision that docs/01-product-requirements.md
+# §7 deliberately deferred out of the PRD ("belong in the project's
+# engineering setup, e.g. pyproject.toml / CI config, not in the product
+# requirements"). Decided here, now that we're at that stage:
+pytest==8.3.3
+pytest-django==4.9.0
+pytest-cov==5.0.0
+
+# Test data — every app's tests/factories.py (per the folder structure
+# in AGENTS.md) is built with this.
+factory-boy==3.3.1
+
+# Linting/formatting — Ruff chosen as a single fast tool covering both
+# lint + format, replacing the separate flake8+black+isort combination.
+ruff==0.7.1
+
+# Local dev convenience only, never in prod
+django-debug-toolbar==4.4.6
