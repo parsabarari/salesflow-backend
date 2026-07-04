@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -20,6 +21,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.postgres",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "rest_framework_simplejwt",
     "apps.core",
     "apps.accounts",
     "apps.organizations",
@@ -91,3 +94,30 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+
+JWT_ACCESS_TOKEN_LIFETIME_MINUTES = int(
+    os.environ.get("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", 15)
+)
+JWT_REFRESH_TOKEN_LIFETIME_DAYS = int(
+    os.environ.get("JWT_REFRESH_TOKEN_LIFETIME_DAYS", 7)
+)
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=JWT_ACCESS_TOKEN_LIFETIME_MINUTES),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=JWT_REFRESH_TOKEN_LIFETIME_DAYS),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "REFRESH_TOKEN_CLASS": "apps.accounts.tokens.RefreshToken",
+    "TOKEN_REFRESH_SERIALIZER": "apps.accounts.serializers.CustomTokenRefreshSerializer",
+}
