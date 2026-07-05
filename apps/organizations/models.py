@@ -1,7 +1,10 @@
 from django.db import models
 from django.db.models import Q
 
-from apps.core.models import CIEmailField, OrgScopedModel, SoftDeleteModel, TimeStampedModel
+from apps.core.models import (CIEmailField, OrgScopedModel, 
+                              SoftDeleteModel, TimeStampedModel,)
+from apps.core.managers import (OrgScopedManager, OrgScopedAllManager,
+                                OrgScopedNoSoftDeleteManager, UnscopedManager)
 
 
 class MembershipRole(models.TextChoices):
@@ -40,6 +43,10 @@ class Membership(TimeStampedModel, SoftDeleteModel, OrgScopedModel):
         blank=True,
         related_name="direct_reports",
     )
+
+    objects = OrgScopedManager()
+    all_objects = OrgScopedAllManager()
+    unscoped = UnscopedManager()
 
     class Meta:
         db_table = "memberships"
@@ -81,6 +88,8 @@ class Invitation(TimeStampedModel, OrgScopedModel):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     expires_at = models.DateTimeField()
 
+    objects = OrgScopedNoSoftDeleteManager()
+    
     class Meta:
         db_table = "invitations"
         constraints = [
@@ -106,3 +115,6 @@ class Invitation(TimeStampedModel, OrgScopedModel):
 
     def __str__(self):
         return f"{self.email} -> {self.organization_id}"
+
+
+

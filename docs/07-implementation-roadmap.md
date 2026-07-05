@@ -19,11 +19,11 @@ cross-entity flows that depend on multiple pieces existing together.
 ## Phase 1 — Auth, Organizations, RBAC, Leads, Pipeline
 
 ### 1.1 Foundation
-- [ ] `users`, `organizations`, `memberships`, `invitations` models +
+- [x] `users`, `organizations`, `memberships`, `invitations` models +
       migrations (04-erd.md §1–4)
-- [ ] JWT auth wired up: access/refresh pair, Redis-backed refresh
+- [x] JWT auth wired up: access/refresh pair, Redis-backed refresh
       blocklist (06-architecture.md §1, Business Rules 2.1–2.2)
-- [ ] Base queryset manager enforcing `organization_id` filtering at
+- [x] Base queryset manager enforcing `organization_id` filtering at
       the manager level, not per-view (06-architecture.md §1)
 - [ ] Auth endpoints: signup, login, logout, refresh, password reset,
       email verification (05-api-spec.md §2)

@@ -2,6 +2,9 @@ from django.db import models
 from django.db.models.functions import Now
 from django.utils import timezone
 
+from apps.core.managers import (OrgScopedManager, ActiveManager,
+                                AllManager,)
+
 
 class CIEmailField(models.EmailField):
     description = "Case-insensitive email stored as PostgreSQL citext"
@@ -10,44 +13,6 @@ class CIEmailField(models.EmailField):
         if connection.vendor == "postgresql":
             return "citext"
         return super().db_type(connection)
-
-
-class OrganizationScopedQuerySet(models.QuerySet):
-    def for_organization(self, organization_id):
-        return self.filter(organization_id=organization_id)
-
-
-class OrganizationScopedManager(models.Manager.from_queryset(OrganizationScopedQuerySet)):
-    pass
-
-
-class SoftDeleteQuerySet(OrganizationScopedQuerySet):
-    def active(self):
-        return self.filter(deleted_at__isnull=True)
-
-    def deleted(self):
-        return self.filter(deleted_at__isnull=False)
-
-    def delete(self):
-        return self.update(deleted_at=timezone.now())
-
-    def hard_delete(self):
-        return super().delete()
-
-    def restore(self):
-        return self.update(deleted_at=None)
-
-
-class SoftDeleteManager(models.Manager.from_queryset(SoftDeleteQuerySet)):
-    def get_queryset(self):
-        return super().get_queryset().active()
-
-    def include_deleted(self):
-        return self.model.all_objects.using(self._db).all()
-
-
-class SoftDeleteAllManager(models.Manager.from_queryset(SoftDeleteQuerySet)):
-    pass
 
 
 class TimeStampedModel(models.Model):
@@ -60,8 +25,8 @@ class TimeStampedModel(models.Model):
 class SoftDeleteModel(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
 
-    objects = SoftDeleteManager()
-    all_objects = SoftDeleteAllManager()
+    objects = ActiveManager()
+    all_objects = AllManager()
 
     class Meta:
         abstract = True
@@ -85,7 +50,6 @@ class OrgScopedModel(models.Model):
         related_name="%(app_label)s_%(class)s_set",
     )
 
-    objects = OrganizationScopedManager()
 
     class Meta:
         abstract = True
