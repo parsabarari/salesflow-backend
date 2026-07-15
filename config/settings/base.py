@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.accounts",
     "apps.organizations",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -108,6 +109,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -120,4 +123,12 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
     "REFRESH_TOKEN_CLASS": "apps.accounts.tokens.RefreshToken",
     "TOKEN_REFRESH_SERIALIZER": "apps.accounts.serializers.CustomTokenRefreshSerializer",
+}
+
+# drf_spectacular
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Ecommerce API",
+    "DESCRIPTION": "Production-ready Ecommerce API built with Django REST Framework.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
