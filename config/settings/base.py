@@ -129,6 +129,7 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
     "REFRESH_TOKEN_CLASS": "apps.accounts.tokens.RefreshToken",
     "TOKEN_REFRESH_SERIALIZER": "apps.accounts.serializers.CustomTokenRefreshSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "apps.accounts.serializers.CustomTokenObtainPairSerializer",
 }
 
 # drf_spectacular
@@ -138,3 +139,5 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", default="http://localhost:3000")

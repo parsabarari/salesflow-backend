@@ -25,7 +25,7 @@ cross-entity flows that depend on multiple pieces existing together.
       blocklist (06-architecture.md §1, Business Rules 2.1–2.2)
 - [x] Base queryset manager enforcing `organization_id` filtering at
       the manager level, not per-view (06-architecture.md §1)
-- [ ] Auth endpoints: signup, login, logout, refresh, password reset,
+- [x] Auth endpoints: signup, login, logout, refresh, password reset,
       email verification (05-api-spec.md §2)
 - [ ] Invitation flow: create, resend, accept (05-api-spec.md §3);
       Celery Beat expiry sweep (06-architecture.md §3)
