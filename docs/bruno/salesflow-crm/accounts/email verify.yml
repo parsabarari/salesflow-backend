@@ -10,8 +10,8 @@ http:
     type: json
     data: |-
       {
-        "uid": "NA",
-        "token": "dbqmv5-a0784068fa7ae505173fd40b320b197b"
+        "uid": "NQ",
+        "token": "dbs6k9-b89d5116bb134930b76076af5efe0cea"
       }
   auth: inherit
 

@@ -89,6 +89,7 @@ class Invitation(TimeStampedModel, OrgScopedModel):
     expires_at = models.DateTimeField()
 
     objects = OrgScopedNoSoftDeleteManager()
+    unscoped = UnscopedManager()
     
     class Meta:
         db_table = "invitations"

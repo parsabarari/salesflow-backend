@@ -148,3 +148,5 @@ State plainly: which roadmap item you completed, which doc sections
 you implemented against, what you deliberately left out (and why, with
 a doc reference), and any open question you hit that needs a human
 decision before the next task can safely proceed.
+
+"Every ModelSerializer for an org-scoped model must set Meta.validators = [] — DRF's automatic unique-constraint validator calls the model's default (org-scoped) manager outside of any request/org context (e.g. during OpenAPI schema generation), which raises RuntimeError. Uniqueness is enforced by the DB constraint at save time and/or explicit service-layer checks instead."

@@ -1,0 +1,25 @@
+info:
+  name: send invitation
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://127.0.0.1:8000/api/v1/organizations/1/invitations/
+  body:
+    type: json
+    data: |-
+      {
+        "organization_id": "1",
+        "email": "parsaperix2@gmail.com",
+        "role": "sales_agent"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg0MTYxMTcyLCJpYXQiOjE3ODQxNjAyNzIsImp0aSI6ImM1MmUzODU1MGM3MzRiYTliZTQzYzdmZTQ1ZjZmMmJlIiwidXNlcl9pZCI6Mn0.y0YANgL1IH21UbXwbFjUOeCkZaa-ZH9TjUizlC5wZYw
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,14 +1,17 @@
 from django.http import Http404
-from rest_framework.viewsets import ViewSetMixin
+from rest_framework.permissions import IsAuthenticated
 
 from apps.core.context import clear_current_organization, set_current_organization
 from apps.organizations.models import Membership
 
 
-class OrgScopedViewSetMixin(ViewSetMixin):
+class OrgScopedViewSetMixin:
     organization_url_kwarg = "organization_id"
+    permission_classes = [IsAuthenticated]
 
     def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+
         organization_id = int(kwargs[self.organization_url_kwarg])
         if not Membership.unscoped.filter(
             user=request.user,
@@ -17,7 +20,6 @@ class OrgScopedViewSetMixin(ViewSetMixin):
         ).exists():
             raise Http404()
         set_current_organization(organization_id)
-        super().initial(request, *args, **kwargs)
 
     def finalize_response(self, request, response, *args, **kwargs):
         try:
