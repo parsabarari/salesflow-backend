@@ -27,7 +27,7 @@ cross-entity flows that depend on multiple pieces existing together.
       the manager level, not per-view (06-architecture.md §1)
 - [x] Auth endpoints: signup, login, logout, refresh, password reset,
       email verification (05-api-spec.md §2)
-- [ ] Invitation flow: create, resend, accept (05-api-spec.md §3);
+- [x] Invitation flow: create, resend, accept (05-api-spec.md §3);
       Celery Beat expiry sweep (06-architecture.md §3)
 
 ### 1.2 RBAC
