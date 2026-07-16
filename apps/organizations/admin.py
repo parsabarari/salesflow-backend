@@ -16,6 +16,9 @@ class MembershipAdmin(admin.ModelAdmin):
     list_filter = ("role",)
     search_fields = ("user__email", "organization__name")
     readonly_fields = ("created_at",)
+    
+    def get_queryset(self, request):
+        return Membership.unscoped.all()
 
 
 @admin.register(Invitation)
@@ -24,3 +27,6 @@ class InvitationAdmin(admin.ModelAdmin):
     list_filter = ("role", "status")
     search_fields = ("email", "organization__name")
     readonly_fields = ("created_at",)
+
+    def get_queryset(self, request):
+        return Invitation.unscoped.all()
