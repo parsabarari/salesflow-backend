@@ -56,12 +56,16 @@ apps/dashboard/       — aggregation endpoint only, no models
 apps/search/          — search endpoint only, no models
 ```
 
-Dependency direction is one-way: `core` → `accounts`/`organizations` →
-`customers` → `leads` → `tickets` → `activities`/`collaboration` →
-`notifications`/`audit` → `dashboard`/`search`. A lower app must never
-import from a higher one. `activities` and `collaboration` reach Lead/
-Customer/Ticket only through Django's ContentType framework
-(`GenericForeignKey`), never a direct import or FK.
+Dependency direction is one-way: `core` → `audit`/`notifications` →
+`accounts`/`organizations` → `customers` → `leads` → `tickets` →
+`activities`/`collaboration` → `dashboard`/`search`. A lower app must
+never import from a higher one — except that any app may call into
+`audit` or `notifications` to record an event (AuditLog write per
+Business Rules 3.3/11.1, or Notification write per Business Rules
+10.3), since those two apps sit intentionally early in the chain
+specifically to be callable from everywhere else. `activities` and
+`collaboration` reach Lead/Customer/Ticket only through Django's
+ContentType framework (`GenericForeignKey`), never a direct import or FK.
 
 Inside every app: `models.py` (data only) / `services.py` (business
 logic — this is where rule enforcement lives) / `serializers.py` /
