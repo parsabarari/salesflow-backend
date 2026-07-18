@@ -57,8 +57,21 @@ class MembershipRBACTests(TestCase):
         self.client.force_authenticate(user=self.owner_user)
         response = self.client.patch(self._url(self.agent.id), {"role": MembershipRole.OWNER}, format="json")
         self.assertEqual(response.status_code, 200)
+
+        self.agent.refresh_from_db()
+        self.owner.refresh_from_db()
+        self.assertEqual(self.agent.role, MembershipRole.OWNER)
+        self.assertEqual(self.owner.role, MembershipRole.ADMIN)  # auto-demoted
+
         self.assertTrue(
             AuditLog.unscoped.filter(action_type=AuditActionType.OWNERSHIP_TRANSFERRED, target_object_id=self.agent.id).exists()
+        )
+        self.assertTrue(
+            AuditLog.unscoped.filter(
+                action_type=AuditActionType.ROLE_CHANGED,
+                target_object_id=self.owner.id,
+                metadata__reason="auto_demoted_after_ownership_transfer",
+            ).exists()
         )
 
     def test_membership_in_other_org_returns_404(self):

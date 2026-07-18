@@ -136,25 +136,22 @@ class MembershipService:
     @transaction.atomic
     def change_role(*, actor_membership: Membership, target_membership: Membership, new_role: str) -> Membership:
         # Business Rules 3.4: a user can never elevate their own role.
-        # Conservative reading (no role-hierarchy is defined in the docs
-        # to distinguish "elevate" from "demote"): self-role-change is
-        # disallowed outright via this endpoint.
         if actor_membership.id == target_membership.id:
             raise ValueError("You cannot change your own role.")
 
-        # PRD 5.3: ownership transfer is explicitly excluded from Admin's
-        # permissions — only the current Owner can promote someone to Owner.
+        # PRD 5.3: ownership transfer is excluded from Admin's permissions —
+        # only the current Owner can transfer ownership.
         if new_role == MembershipRole.OWNER and actor_membership.role != MembershipRole.OWNER:
             raise ValueError("Only the Owner can transfer ownership.")
+
+        is_ownership_transfer = new_role == MembershipRole.OWNER
 
         old_role = target_membership.role
         target_membership.role = new_role
         target_membership.save(update_fields=["role"])
 
         action_type = (
-            AuditActionType.OWNERSHIP_TRANSFERRED
-            if new_role == MembershipRole.OWNER
-            else AuditActionType.ROLE_CHANGED
+            AuditActionType.OWNERSHIP_TRANSFERRED if is_ownership_transfer else AuditActionType.ROLE_CHANGED
         )
         AuditLogService.record(
             organization=target_membership.organization,
@@ -163,6 +160,27 @@ class MembershipService:
             target=target_membership,
             metadata={"old_role": old_role, "new_role": new_role},
         )
+
+        # Decision (not yet in docs/02-business-rules.md — recommend adding
+        # it there): ownership transfer is a 1:1 handoff, not an addition.
+        # An organization has exactly one Owner at a time, so the previous
+        # Owner is auto-demoted to Admin rather than left as a second Owner.
+        if is_ownership_transfer:
+            previous_owner_old_role = actor_membership.role  # == OWNER, guaranteed above
+            actor_membership.role = MembershipRole.ADMIN
+            actor_membership.save(update_fields=["role"])
+            AuditLogService.record(
+                organization=actor_membership.organization,
+                actor_membership=actor_membership,
+                action_type=AuditActionType.ROLE_CHANGED,
+                target=actor_membership,
+                metadata={
+                    "old_role": previous_owner_old_role,
+                    "new_role": MembershipRole.ADMIN,
+                    "reason": "auto_demoted_after_ownership_transfer",
+                },
+            )
+
         return target_membership
 
     @staticmethod
