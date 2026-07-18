@@ -51,10 +51,19 @@ class OrgScopedCreateMixin:
         obj.save(using=self._db)
         return obj
 
+
 class OrgScopedManager(OrgScopedCreateMixin, models.Manager.from_queryset(BaseQuerySet)):
+    """Default manager for org-scoped, soft-deletable models: filters by
+    organization AND excludes soft-deleted rows. Previously this did NOT
+    filter deleted_at (identical to OrgScopedAllManager below) — fixed
+    here since every model going forward relies on this to correctly
+    exclude removed rows by default (API Spec §1.7). Models with no
+    deleted_at column at all should use OrgScopedNoSoftDeleteManager."""
+
     def get_queryset(self):
         return super().get_queryset().filter(
-            organization_id=get_current_organization()
+            organization_id=get_current_organization(),
+            deleted_at__isnull=True,
         )
 
 
