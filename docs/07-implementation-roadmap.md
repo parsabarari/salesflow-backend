@@ -34,10 +34,10 @@ cross-entity flows that depend on multiple pieces existing together.
 - [ ] Permission classes implementing the full matrix (PRD 5.3):
       queryset-level filtering + action-level checks
       (Business Rules 3.1)
-- [ ] `reports_to` "team" resolution logic (Business Rules 3.2)
-- [ ] Role-change / member-removal endpoints + AuditLog writes
+- [x] `reports_to` "team" resolution logic (Business Rules 3.2)
+- [x] Role-change / member-removal endpoints + AuditLog writes
       (05-api-spec.md §3, Business Rules 3.3)
-- [ ] 404-not-403 behavior verified for out-of-scope object access
+- [x] 404-not-403 behavior verified for out-of-scope object access
       (API Spec §1.5)
 
 ### 1.3 Leads & Pipeline
