@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.organizations",
     "apps.audit",
+    "apps.leads",
     "drf_spectacular",
 ]
 
