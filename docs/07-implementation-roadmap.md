@@ -41,11 +41,11 @@ cross-entity flows that depend on multiple pieces existing together.
       (API Spec §1.5)
 
 ### 1.3 Leads & Pipeline
-- [ ] `leads`, `lead_tags`, `lead_stage_history`, `tags` models +
+- [x] `leads`, `lead_tags`, `lead_stage_history`, `tags` models +
       migrations (04-erd.md §5–8)
 - [ ] Lead CRUD + duplicate-warning logic on create/edit
       (Business Rules 4.3, API Spec §4)
-- [ ] Stage-transition endpoint with the full state machine (free
+- [x] Stage-transition endpoint with the full state machine (free
       movement between non-terminal stages, Lost reversible, Won
       terminal, `lost_reason` required) — Business Rules 5.2,
       API Spec §4
@@ -57,7 +57,7 @@ cross-entity flows that depend on multiple pieces existing together.
 - [ ] Org isolation: cross-org access attempts return 404
 - [ ] Each RBAC matrix cell: at least one test per role × resource
       combination in PRD 5.3
-- [ ] Every stage-transition rule from Business Rules 5.2 (valid and
+- [x] Every stage-transition rule from Business Rules 5.2 (valid and
       invalid transitions, Lost reopening, Won irreversibility)
 
 ---
