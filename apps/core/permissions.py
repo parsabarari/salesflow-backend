@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission
+from rest_framework.permissions import SAFE_METHODS
 
 from apps.organizations.models import Membership, MembershipRole
 
@@ -51,3 +52,36 @@ class IsOwner(BasePermission):
         request.membership = membership
         return membership.role == MembershipRole.OWNER
     
+
+SCOPE_FULL = "full"
+SCOPE_TEAM = "team"
+SCOPE_OWN = "own"
+SCOPE_READONLY_ORG = "readonly_org"
+SCOPE_NONE = "none"
+
+class RoleMatrixPermission(BasePermission):
+    """Generic action-level enforcement of a PRD 5.3 matrix cell.
+    Views set `role_scope_map`: dict[MembershipRole, one of the SCOPE_*
+    constants]. Roles absent from the map default to SCOPE_NONE — fail
+    closed, not open.
+
+    Visibility (which specific rows an "own"/"team" role can act on) is
+    NOT handled here — that's RoleScopedQuerysetMixin's job (core/viewsets.py).
+    Splitting it this way means an out-of-scope object 404s naturally via
+    get_object() failing to find it in an already-filtered queryset,
+    matching API Spec §1.5, rather than needing a permission-denied-to-404
+    conversion.
+    """
+
+    def has_permission(self, request, view):
+        membership = get_active_membership(request)
+        if membership is None:
+            return False
+        request.membership = membership
+        scope = getattr(view, "role_scope_map", {}).get(membership.role, SCOPE_NONE)
+        request.rbac_scope = scope
+        if scope == SCOPE_NONE:
+            return False
+        if scope == SCOPE_READONLY_ORG and request.method not in SAFE_METHODS:
+            return False
+        return True
