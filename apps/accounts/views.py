@@ -6,8 +6,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.views.generic import TemplateView
-
 
 from apps.accounts.services import (TokenBlocklistService, EmailVerificationService,
                                     PasswordResetService, )
@@ -103,7 +101,3 @@ class PasswordResetConfirmView(APIView):
         if not ok:
             return Response({"detail": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK)
-
-
-class ScalarAPIView(TemplateView):
-    template_name = "scalar/index.html"
