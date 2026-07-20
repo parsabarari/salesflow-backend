@@ -43,7 +43,7 @@ cross-entity flows that depend on multiple pieces existing together.
 ### 1.3 Leads & Pipeline
 - [x] `leads`, `lead_tags`, `lead_stage_history`, `tags` models +
       migrations (04-erd.md §5–8)
-- [ ] Lead CRUD + duplicate-warning logic on create/edit
+- [x] Lead CRUD + duplicate-warning logic on create/edit
       (Business Rules 4.3, API Spec §4)
 - [x] Stage-transition endpoint with the full state machine (free
       movement between non-terminal stages, Lost reversible, Won
