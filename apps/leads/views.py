@@ -116,10 +116,22 @@ class LeadDetailView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView):
                 return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             data["owner"] = target_owner
 
+        possible_duplicates = None
+        if "email" in data or "phone" in data:
+            possible_duplicates = LeadDuplicateService.find_possible_duplicates(
+                email=data.get("email", lead.email),
+                phone=data.get("phone", lead.phone),
+                exclude_lead_id=lead.id,
+            )
+
         for field, value in data.items():
             setattr(lead, field, value)
         lead.save(update_fields=list(data.keys()))
-        return Response(LeadSerializer(lead).data)
+
+        response_data = LeadSerializer(lead).data
+        if possible_duplicates is not None:
+            response_data["possible_duplicates"] = possible_duplicates
+        return Response(response_data)
 
     def delete(self, request, organization_id, lead_id):
         if request.rbac_scope == SCOPE_READONLY_ORG:

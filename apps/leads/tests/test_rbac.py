@@ -64,3 +64,31 @@ class LeadRBACTests(TestCase):
         self.client.force_authenticate(user=self.agent_a.user)
         response = self.client.post(self._list_url(), {"owner_id": self.agent_b.id, "source": "web", "email": "x@example.com"}, format="json")
         self.assertEqual(response.status_code, 400)
+
+
+def test_admin_sees_all_leads(self):
+    admin = Membership.objects.create(
+        user=User.objects.create_user(email="admin@example.com", password="secret"),
+        organization=self.organization,
+        role=MembershipRole.ADMIN,
+    )
+    self.client.force_authenticate(user=admin.user)
+    response = self.client.get(self._list_url())
+    ids = {lead["id"] for lead in response.data}
+    self.assertEqual(ids, {self.lead_a.id, self.lead_b.id})
+
+def test_lead_in_other_org_returns_404(self):
+    other_organization = Organization.objects.create(name="Other")
+    set_current_organization(other_organization.id)
+    other_owner = Membership.objects.create(
+        user=User.objects.create_user(email="stranger@example.com", password="secret"),
+        organization=other_organization,
+        role=MembershipRole.OWNER,
+    )
+    other_lead = Lead.objects.create(organization=other_organization, owner=other_owner, source="web", email="stranger@example.com")
+    clear_current_organization()
+
+    self.client.force_authenticate(user=self.owner.user)
+    response = self.client.get(f"/api/v1/organizations/{self.organization.id}/leads/{other_lead.id}/")
+    self.assertEqual(response.status_code, 404)
+
