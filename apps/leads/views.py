@@ -11,10 +11,12 @@ from apps.core.permissions import (
 from apps.core.views import OrgScopedViewSetMixin
 from apps.core.viewsets import RoleScopedQuerysetMixin
 from apps.leads.models import Lead
-from apps.leads.serializers import (
-    LeadCreateSerializer, LeadSerializer, LeadStageTransitionSerializer, LeadUpdateSerializer,
-)
-from apps.leads.services import LeadDuplicateService, LeadService, LeadStageTransitionService, assert_can_assign_owner
+from apps.leads.serializers import (LeadCreateSerializer, LeadSerializer,
+                                    LeadStageTransitionSerializer, LeadUpdateSerializer,
+                                    LeadTimelineEventSerializer, )
+from apps.leads.services import (LeadDuplicateService, LeadService,
+                                 LeadStageTransitionService, LeadTimelineService,
+                                 assert_can_assign_owner, )
 from apps.organizations.models import Membership, MembershipRole
 
 # PRD 5.3 matrix, Leads column. Support Agent has no Lead access ("—").
@@ -35,6 +37,21 @@ def _resolve_owner(owner_id):
         return Membership.objects.get(id=owner_id)
     except Membership.DoesNotExist:
         raise ValueError("Invalid owner_id.")
+    
+
+class LeadObjectLookupMixin(RoleScopedQuerysetMixin):
+    """Shared by every view that operates on a single existing Lead
+    (detail, stage-transition, timeline) — factored out since all three
+    need identical 'fetch within my visible scope, or 404' logic."""
+
+    def get_base_queryset(self):
+        return Lead.objects.all()  # archived Leads still individually reachable by ID
+
+    def _get_object(self, lead_id):
+        try:
+            return self.get_queryset().get(id=lead_id)
+        except Lead.DoesNotExist:
+            raise Http404()
 
 
 class LeadListCreateView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView):
@@ -80,19 +97,10 @@ class LeadListCreateView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView
         return Response(response_data, status=status.HTTP_201_CREATED)
 
 
-class LeadDetailView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView):
+class LeadDetailView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = LEAD_ROLE_SCOPE_MAP
     owner_field = "owner"
-
-    def get_base_queryset(self):
-        return Lead.objects.all()  # archived Leads still individually reachable by ID
-
-    def _get_object(self, lead_id):
-        try:
-            return self.get_queryset().get(id=lead_id)
-        except Lead.DoesNotExist:
-            raise Http404()
 
     def get(self, request, organization_id, lead_id):
         return Response(LeadSerializer(self._get_object(lead_id)).data)
@@ -143,13 +151,10 @@ class LeadDetailView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class LeadStageTransitionView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView):
+class LeadStageTransitionView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = LEAD_ROLE_SCOPE_MAP
     owner_field = "owner"
-
-    def get_base_queryset(self):
-        return Lead.objects.all()
 
     def post(self, request, organization_id, lead_id):
         if request.rbac_scope == SCOPE_READONLY_ORG:
@@ -172,3 +177,14 @@ class LeadStageTransitionView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, AP
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(LeadSerializer(lead).data)
+
+
+class LeadTimelineView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
+    permission_classes = [IsAuthenticated, RoleMatrixPermission]
+    role_scope_map = LEAD_ROLE_SCOPE_MAP
+    owner_field = "owner"
+
+    def get(self, request, organization_id, lead_id):
+        lead = self._get_object(lead_id)
+        events = LeadTimelineService.get_timeline(lead)
+        return Response(LeadTimelineEventSerializer(events, many=True).data)

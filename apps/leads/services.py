@@ -161,3 +161,32 @@ class LeadService:
         lead = Lead.objects.create(organization=organization, owner=owner, source=source, email=email, phone=phone)
         LeadStageHistory.objects.create(lead=lead, from_stage=None, to_stage=lead.stage, changed_by=owner)
         return lead
+
+
+class LeadTimelineService:
+    """Domain Model §8.1 / PRD 8.1 — per-Lead event feed. Currently only
+    Stage History exists as a source; Notes/Comments/Activities join in
+    once those models exist (Phase 2), per the roadmap's own note that
+    this endpoint may return a partial view until then. Event shape is
+    deliberately generic (type/occurred_at/data) so adding a new source
+    later doesn't change what existing consumers already rely on."""
+
+    @staticmethod
+    def get_timeline(lead) -> list[dict]:
+        events = [
+            {
+                "type": "stage_change",
+                "occurred_at": entry.changed_at,
+                "data": {
+                    "from_stage": entry.from_stage,
+                    "to_stage": entry.to_stage,
+                    "changed_by_id": entry.changed_by_id,
+                    "reason": entry.reason,
+                },
+            }
+            for entry in lead.stage_history.all()
+        ]
+        # Newest first — a UI convention assumption (not specified in the
+        # docs either way); easy to flip if you'd rather read it chronologically.
+        events.sort(key=lambda e: e["occurred_at"], reverse=True)
+        return events

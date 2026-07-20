@@ -52,3 +52,9 @@ class LeadUpdateSerializer(serializers.Serializer):
 class LeadStageTransitionSerializer(serializers.Serializer):
     to_stage = serializers.ChoiceField(choices=LeadStage.choices)
     reason = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class LeadTimelineEventSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    occurred_at = serializers.DateTimeField()
+    data = serializers.DictField()
