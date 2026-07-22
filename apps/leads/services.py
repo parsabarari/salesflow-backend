@@ -6,7 +6,9 @@ from apps.leads.models import (Lead, LeadStage,
                                LeadStageHistory, LeadTag,
                                Tag, )
 from apps.core.permissions import SCOPE_FULL, SCOPE_OWN, SCOPE_TEAM
+from apps.core.normalization import normalize_email, normalize_phone
 from apps.organizations.services import TeamService
+from apps.customers.services import CustomerService
 
 
 def normalize_email(email: str | None) -> str | None:
@@ -120,6 +122,9 @@ class LeadStageTransitionService:
         # stays False. This will be wired in once Customer exists.
 
         lead.save(update_fields=["stage", "lost_reason"])
+
+        if to_stage == LeadStage.WON:
+            CustomerService.resolve_won_lead(lead=lead)
 
         LeadStageHistory.objects.create(
             lead=lead,

@@ -15,11 +15,12 @@ from apps.leads.models import Lead, Tag
 from apps.leads.serializers import (LeadCreateSerializer, LeadSerializer,
                                     LeadStageTransitionSerializer, LeadUpdateSerializer,
                                     LeadTimelineEventSerializer, TagCreateSerializer,
-                                    TagSerializer, )
+                                    TagSerializer, ResolveCustomerSerializer,)
 from apps.leads.services import (LeadDuplicateService, LeadService,
                                  LeadStageTransitionService, LeadTimelineService,
                                  TagService, assert_can_assign_owner,)
 from apps.organizations.models import Membership, MembershipRole
+from apps.customers.services import CustomerService
 
 # PRD 5.3 matrix, Leads column. Support Agent has no Lead access ("—").
 # Viewer clarified as org-wide read-only (see conversation decision —
@@ -242,3 +243,25 @@ class LeadTagAttachView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
         lead = self._get_object(lead_id)
         TagService.detach(lead=lead, tag_id=tag_id)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class LeadResolveCustomerView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
+    permission_classes = [IsAuthenticated, RoleMatrixPermission]
+    role_scope_map = LEAD_ROLE_SCOPE_MAP
+    owner_field = "owner"
+
+    def post(self, request, organization_id, lead_id):
+        if request.rbac_scope == SCOPE_READONLY_ORG:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        lead = self._get_object(lead_id)
+        serializer = ResolveCustomerSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            CustomerService.resolve_manual_selection(lead=lead, customer_id=serializer.validated_data["customer_id"])
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        lead.refresh_from_db()
+        return Response(LeadSerializer(lead).data)

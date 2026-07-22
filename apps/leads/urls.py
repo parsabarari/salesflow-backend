@@ -2,7 +2,7 @@ from django.urls import path
 
 from apps.leads.views import (
     LeadDetailView, LeadListCreateView, LeadStageTransitionView, LeadTagAttachView,
-    LeadTimelineView, TagListCreateView,
+    LeadTimelineView, TagListCreateView, LeadResolveCustomerView, 
 )
 
 urlpatterns = [
@@ -13,4 +13,5 @@ urlpatterns = [
     path("<int:organization_id>/leads/<int:lead_id>/tags/", LeadTagAttachView.as_view(), name="lead-tag-attach"),
     path("<int:organization_id>/leads/<int:lead_id>/tags/<int:tag_id>/", LeadTagAttachView.as_view(), name="lead-tag-detach"),
     path("<int:organization_id>/tags/", TagListCreateView.as_view(), name="tag-list-create"),
+    path("<int:organization_id>/leads/<int:lead_id>/resolve-customer/", LeadResolveCustomerView.as_view(), name="lead-resolve-customer"),
 ]

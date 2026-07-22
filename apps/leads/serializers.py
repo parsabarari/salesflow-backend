@@ -11,17 +11,22 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class LeadSerializer(serializers.ModelSerializer):
-    owner_id = serializers.IntegerField(source="owner.id", read_only=True)
+    owner_id = serializers.IntegerField(read_only=True)
+    customer_id = serializers.IntegerField(read_only=True)
     tag_ids = serializers.PrimaryKeyRelatedField(source="tags", many=True, read_only=True)
 
     class Meta:
         model = Lead
         fields = [
-            "id", "owner_id", "source", "email", "phone", "stage", "lost_reason",
+            "id", "owner_id", "customer_id", "source", "email", "phone", "stage", "lost_reason",
             "is_archived", "requires_manual_customer_selection", "tag_ids", "created_at",
         ]
         read_only_fields = ["stage", "lost_reason", "requires_manual_customer_selection", "created_at"]
         validators = []
+
+
+class ResolveCustomerSerializer(serializers.Serializer):
+    customer_id = serializers.IntegerField()
 
 
 class LeadCreateSerializer(serializers.Serializer):
