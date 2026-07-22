@@ -59,11 +59,13 @@ class Lead(TimeStampedModel, SoftDeleteModel, OrgScopedModel):
     lost_reason = models.TextField(null=True, blank=True)
     is_archived = models.BooleanField(default=False)
     requires_manual_customer_selection = models.BooleanField(default=False)
-    # NOTE: `customer_id` (FK -> customers.Customer, ERD §6) is deliberately
-    # NOT added yet. apps.customers.Customer doesn't exist until Phase 2.1
-    # (docs/07-implementation-roadmap.md) — Won->Customer linking itself is
-    # explicitly scoped to Phase 2.1, not Phase 1.3, per the roadmap. Will
-    # be added via a dedicated migration once Customer exists.
+    customer = models.ForeignKey(
+        "customers.Customer",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="won_leads",
+    )
 
     tags = models.ManyToManyField(Tag, through="LeadTag", related_name="leads")
 
