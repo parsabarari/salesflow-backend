@@ -1,8 +1,10 @@
 from django.http import Http404
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from apps.core.context import clear_current_organization, set_current_organization
+from apps.core.idempotency import IdempotencyService
 from apps.organizations.models import Membership
 
 
@@ -40,3 +42,30 @@ class OrgScopedViewSetMixin:
             return super().finalize_response(request, response, *args, **kwargs)
         finally:
             clear_current_organization()
+
+
+class IdempotentPostMixin:
+    """Mix in wherever post() has a side effect beyond simple row
+    creation (API Spec §1.6). Implement _handle_idempotent_post()
+    instead of post() directly; this wraps it with the header check."""
+
+    def post(self, request, *args, **kwargs):
+        idempotency_key = request.headers.get("Idempotency-Key")
+        organization_id = kwargs.get(self.organization_url_kwarg)
+
+        cached = IdempotencyService.get_cached_response(
+            organization_id=organization_id, path=request.path, idempotency_key=idempotency_key,
+        )
+        if cached is not None:
+            return Response(cached["data"], status=cached["status_code"])
+
+        response = self._handle_idempotent_post(request, *args, **kwargs)
+
+        IdempotencyService.store_response(
+            organization_id=organization_id, path=request.path, idempotency_key=idempotency_key,
+            status_code=response.status_code, data=response.data,
+        )
+        return response
+
+    def _handle_idempotent_post(self, request, *args, **kwargs):
+        raise NotImplementedError

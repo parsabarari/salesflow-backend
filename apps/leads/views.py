@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from apps.core.permissions import (
     RoleMatrixPermission, SCOPE_FULL, SCOPE_NONE, SCOPE_OWN, SCOPE_READONLY_ORG, SCOPE_TEAM,
 )
-from apps.core.views import OrgScopedViewSetMixin
+from apps.core.views import IdempotentPostMixin, OrgScopedViewSetMixin
 from apps.core.viewsets import RoleScopedQuerysetMixin
 from apps.core.permissions import IsOwnerOrAdmin, get_active_membership  # reused loosely below, see note
 from apps.leads.models import Lead, Tag
@@ -153,12 +153,12 @@ class LeadDetailView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class LeadStageTransitionView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
+class LeadStageTransitionView(IdempotentPostMixin, OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = LEAD_ROLE_SCOPE_MAP
     owner_field = "owner"
 
-    def post(self, request, organization_id, lead_id):
+    def _handle_idempotent_post(self, request, organization_id, lead_id):
         if request.rbac_scope == SCOPE_READONLY_ORG:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
