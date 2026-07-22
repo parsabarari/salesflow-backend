@@ -2,7 +2,9 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from apps.accounts.models import User
+from apps.accounts.redis_client import get_redis_client
 from apps.core.context import clear_current_organization, set_current_organization
+from apps.core.idempotency import IDEMPOTENCY_KEY_PREFIX
 from apps.leads.models import LeadStage
 from apps.leads.services import LeadService
 from apps.organizations.models import Membership, MembershipRole, Organization
@@ -11,6 +13,10 @@ from apps.organizations.models import Membership, MembershipRole, Organization
 class LeadStageIdempotencyTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.redis = get_redis_client()
+        for key in self.redis.scan_iter(f"{IDEMPOTENCY_KEY_PREFIX}*"):
+            self.redis.delete(key)
+
         self.organization = Organization.objects.create(name="Acme")
         set_current_organization(self.organization.id)
         self.owner = Membership.objects.create(
