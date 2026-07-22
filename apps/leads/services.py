@@ -1,8 +1,10 @@
 import re
 
-from django.db import transaction
+from django.db import transaction, IntegrityError
 
-from apps.leads.models import Lead, LeadStage, LeadStageHistory
+from apps.leads.models import (Lead, LeadStage,
+                               LeadStageHistory, LeadTag,
+                               Tag, )
 from apps.core.permissions import SCOPE_FULL, SCOPE_OWN, SCOPE_TEAM
 from apps.organizations.services import TeamService
 
@@ -190,3 +192,22 @@ class LeadTimelineService:
         # docs either way); easy to flip if you'd rather read it chronologically.
         events.sort(key=lambda e: e["occurred_at"], reverse=True)
         return events
+
+
+class TagService:
+    @staticmethod
+    def create(*, organization, name: str) -> Tag:
+        try:
+            return Tag.objects.create(organization=organization, name=name)
+        except IntegrityError:
+            raise ValueError(f"A tag named '{name}' already exists in this organization.")
+
+    @staticmethod
+    def attach(*, lead, tag) -> None:
+        if tag.organization_id != lead.organization_id:
+            raise ValueError("Tag must belong to the same organization as the Lead.")
+        LeadTag.objects.get_or_create(lead=lead, tag=tag, defaults={"organization": lead.organization})
+
+    @staticmethod
+    def detach(*, lead, tag_id) -> None:
+        LeadTag.objects.filter(lead=lead, tag_id=tag_id).delete()

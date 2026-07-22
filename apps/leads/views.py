@@ -10,13 +10,15 @@ from apps.core.permissions import (
 )
 from apps.core.views import OrgScopedViewSetMixin
 from apps.core.viewsets import RoleScopedQuerysetMixin
-from apps.leads.models import Lead
+from apps.core.permissions import IsOwnerOrAdmin, get_active_membership  # reused loosely below, see note
+from apps.leads.models import Lead, Tag
 from apps.leads.serializers import (LeadCreateSerializer, LeadSerializer,
                                     LeadStageTransitionSerializer, LeadUpdateSerializer,
-                                    LeadTimelineEventSerializer, )
+                                    LeadTimelineEventSerializer, TagCreateSerializer,
+                                    TagSerializer, )
 from apps.leads.services import (LeadDuplicateService, LeadService,
                                  LeadStageTransitionService, LeadTimelineService,
-                                 assert_can_assign_owner, )
+                                 TagService, assert_can_assign_owner,)
 from apps.organizations.models import Membership, MembershipRole
 
 # PRD 5.3 matrix, Leads column. Support Agent has no Lead access ("—").
@@ -188,3 +190,55 @@ class LeadTimelineView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
         lead = self._get_object(lead_id)
         events = LeadTimelineService.get_timeline(lead)
         return Response(LeadTimelineEventSerializer(events, many=True).data)
+    
+
+class TagListCreateView(OrgScopedViewSetMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, organization_id):
+        tags = Tag.objects.all()
+        return Response(TagSerializer(tags, many=True).data)
+
+    def post(self, request, organization_id):
+        membership = get_active_membership(request)
+        if membership is None or membership.role not in (
+            MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.SALES_MANAGER,
+        ):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        serializer = TagCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            tag = TagService.create(organization=membership.organization, name=serializer.validated_data["name"])
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(TagSerializer(tag).data, status=status.HTTP_201_CREATED)
+
+
+class LeadTagAttachView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
+    permission_classes = [IsAuthenticated, RoleMatrixPermission]
+    role_scope_map = LEAD_ROLE_SCOPE_MAP
+    owner_field = "owner"
+
+    def post(self, request, organization_id, lead_id):
+        if request.rbac_scope == SCOPE_READONLY_ORG:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        lead = self._get_object(lead_id)
+        tag_id = request.data.get("tag_id")
+        try:
+            tag = Tag.objects.get(id=tag_id)
+        except (Tag.DoesNotExist, TypeError, ValueError):
+            return Response({"detail": "Invalid tag_id."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            TagService.attach(lead=lead, tag=tag)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def delete(self, request, organization_id, lead_id, tag_id):
+        if request.rbac_scope == SCOPE_READONLY_ORG:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        lead = self._get_object(lead_id)
+        TagService.detach(lead=lead, tag_id=tag_id)
+        return Response(status=status.HTTP_204_NO_CONTENT)

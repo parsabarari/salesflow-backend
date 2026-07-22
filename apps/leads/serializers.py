@@ -58,3 +58,7 @@ class LeadTimelineEventSerializer(serializers.Serializer):
     type = serializers.CharField()
     occurred_at = serializers.DateTimeField()
     data = serializers.DictField()
+
+
+class TagCreateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=50)
