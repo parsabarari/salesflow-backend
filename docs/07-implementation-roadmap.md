@@ -49,7 +49,7 @@ cross-entity flows that depend on multiple pieces existing together.
       movement between non-terminal stages, Lost reversible, Won
       terminal, `lost_reason` required) — Business Rules 5.2,
       API Spec §4
-- [ ] Lead Timeline read endpoint (aggregates stage history + notes/
+- [x] Lead Timeline read endpoint (aggregates stage history + notes/
       comments/activities once those exist — can return a partial
       view until Phase 2 lands, or be built last in this phase)
 
