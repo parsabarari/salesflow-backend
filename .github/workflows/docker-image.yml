@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env
+        run: |
+          cat > .env <<EOF
+          DJANGO_SETTINGS_MODULE=config.settings.test
+      
+          # --- Django core ---
+          DJANGO_SECRET_KEY=change-me
+          DJANGO_SETTINGS_MODULE=config.settings.dev
+          DEBUG=True
+          ALLOWED_HOSTS=localhost,127.0.0.1
+          
+          # --- CORS (frontend is a separate app — docs/01-product-requirements.md §1) ---
+          CORS_ALLOWED_ORIGINS=http://localhost:3000
+          
+          # --- Postgres ---
+          POSTGRES_DB=crm
+          POSTGRES_USER=crm
+          POSTGRES_PASSWORD=change-me
+          POSTGRES_HOST=postgres
+          POSTGRES_PORT=5432
+          DATABASE_URL=postgres://crm:change-me@postgres:5432/crm
+          
+          # --- Redis (JWT refresh blocklist, Celery broker/backend, dashboard cache
+          #     — docs/06-architecture.md §1, §3, §4) ---
+          REDIS_URL=redis://redis:6379/0
+          CELERY_BROKER_URL=redis://redis:6379/1
+          CELERY_RESULT_BACKEND=redis://redis:6379/2
+          
+          # --- JWT (docs/02-business-rules.md §2.1-2.3) ---
+          JWT_ACCESS_TOKEN_LIFETIME_MINUTES=15
+          JWT_REFRESH_TOKEN_LIFETIME_DAYS=7
+          
+          # --- Object storage — MinIO locally, real S3 in prod
+          #     (docs/06-architecture.md §2) ---
+          AWS_ACCESS_KEY_ID=minioadmin
+          AWS_SECRET_ACCESS_KEY=change-me
+          AWS_STORAGE_BUCKET_NAME=crm-attachments
+          AWS_S3_ENDPOINT_URL=http://minio:9000
+          AWS_S3_REGION_NAME=us-east-1
+          
+          # --- Email (transactional only — invitations, password reset, mentions;
+          #     docs/06-architecture.md §3. NOT a bulk/campaign sender —
+          #     docs/01-product-requirements.md §6 Out of Scope) ---
+          EMAIL_HOST=smtp.example.com
+          EMAIL_PORT=587
+          EMAIL_HOST_USER=change-me
+          EMAIL_HOST_PASSWORD=change-me
+          EMAIL_USE_TLS=True
+          DEFAULT_FROM_EMAIL=noreply@example.com
+          
+          # --- Rate limiting targets (docs/06-architecture.md §5 — enforced in
+          #     code via DRF throttle classes backed by Redis; nothing to
+          #     configure here beyond REDIS_URL above, kept for visibility) ---
+          
+          FRONTEND_BASE_URL=http://localhost:3000
+
+
+      - name: Build
+        run: docker build -f docker/Dockerfile -t crm-backend .
+
+      - name: Show compose logs
+        if: always()
+        run: |
+          docker compose --env-file .env -f docker/docker-compose.yml logs
+
+      - name: Start containers
+        run: docker compose --env-file .env -f docker/docker-compose.yml up -d
+
+      - name: Wait
+        run: sleep 15
+
+      - name: Show containers
+        if: always()
+        run: docker compose --env-file .env -f docker/docker-compose.yml ps
+
+      - name: Show web logs
+        if: always()
+        run: docker compose --env-file .env -f docker/docker-compose.yml logs web
+
+      - name: Migrate
+        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web python manage.py migrate
+
+      - name: Run Tests
+        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web python manage.py test
+
+      - name: Ruff
+        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web ruff check .
+
+      - name: Black
+        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web black --check .
+
+      - name: Stop
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v
