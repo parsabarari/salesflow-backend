@@ -38,25 +38,25 @@ jobs:
       - name: Show compose logs
         if: failure()
         run: |
-          docker compose -f docker/docker-compose.yml logs
+          docker compose --env-file .env -f docker/docker-compose.yml logs
 
       - name: Start containers
-        run: docker compose -f docker/docker-compose.yml up -d
+        run: docker compose --env-file .env -f docker/docker-compose.yml up -d
 
       - name: Wait
         run: sleep 15
 
       - name: Migrate
-        run: docker compose -f docker/docker-compose.yml exec -T backend python manage.py migrate
+        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web python manage.py migrate
 
       - name: Run Tests
-        run: docker compose -f docker/docker-compose.yml exec -T backend pytest
+        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web python manage.py test
 
       - name: Ruff
-        run: docker compose -f docker/docker-compose.yml exec -T backend ruff check .
+        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web ruff check .
 
       - name: Black
-        run: docker compose -f docker/docker-compose.yml exec -T backend black --check .
+        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web black --check .
 
       - name: Stop
         if: always()
