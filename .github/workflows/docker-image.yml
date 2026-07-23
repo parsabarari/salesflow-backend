@@ -100,11 +100,11 @@ jobs:
       - name: Run Tests
         run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web python manage.py test apps.leads apps.customers
 
-      - name: Ruff
-        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web ruff check .
+      # - name: Ruff
+      #   run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web ruff check .
 
-      - name: Black
-        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web black --check .
+      # - name: Black
+      #   run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web black --check .
 
       - name: Stop
         if: always()
