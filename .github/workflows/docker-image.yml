@@ -15,6 +15,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Create .env
+        run: |
+          cat > .env <<EOF
+          DJANGO_SETTINGS_MODULE=config.settings.test
+      
+          SECRET_KEY=test-secret-key
+      
+          DEBUG=False
+      
+          POSTGRES_DB=test_db
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=postgres
+      
+          AWS_ACCESS_KEY_ID=
+          AWS_SECRET_ACCESS_KEY=
+          EOF
+
       - name: Build
         run: docker build -f docker/Dockerfile -t crm-backend .
 
