@@ -46,6 +46,14 @@ jobs:
       - name: Wait
         run: sleep 15
 
+      - name: Show containers
+        if: always()
+        run: docker compose --env-file .env -f docker/docker-compose.yml ps
+
+      - name: Show web logs
+        if: failure()
+        run: docker compose --env-file .env -f docker/docker-compose.yml logs web
+
       - name: Migrate
         run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web python manage.py migrate
 
