@@ -36,7 +36,7 @@ jobs:
         run: docker build -f docker/Dockerfile -t crm-backend .
 
       - name: Show compose logs
-        if: failure()
+        if: always()
         run: |
           docker compose --env-file .env -f docker/docker-compose.yml logs
 
@@ -51,7 +51,7 @@ jobs:
         run: docker compose --env-file .env -f docker/docker-compose.yml ps
 
       - name: Show web logs
-        if: failure()
+        if: always()
         run: docker compose --env-file .env -f docker/docker-compose.yml logs web
 
       - name: Migrate
