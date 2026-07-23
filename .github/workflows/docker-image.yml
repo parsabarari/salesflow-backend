@@ -35,6 +35,11 @@ jobs:
       - name: Build
         run: docker build -f docker/Dockerfile -t crm-backend .
 
+      - name: Show compose logs
+        if: failure()
+        run: |
+          docker compose -f docker/docker-compose.yml logs
+
       - name: Start containers
         run: docker compose -f docker/docker-compose.yml up -d
 
