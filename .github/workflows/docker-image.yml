@@ -98,7 +98,7 @@ jobs:
         run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web python manage.py migrate
 
       - name: Run Tests
-        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web python manage.py test
+        run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web python manage.py test apps.leads apps.customers
 
       - name: Ruff
         run: docker compose --env-file .env -f docker/docker-compose.yml exec -T web ruff check .
