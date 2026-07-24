@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.leads",
     "apps.customers",
     "apps.activities",
+    "apps.tickets",
     "drf_spectacular",
 ]
 
