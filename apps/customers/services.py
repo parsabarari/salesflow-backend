@@ -97,3 +97,22 @@ class CustomerService:
         lead.requires_manual_customer_selection = False
         lead.save(update_fields=["customer", "requires_manual_customer_selection"])
         return customer
+
+
+class ContactService:
+    @staticmethod
+    def create(*, customer, name, email=None, phone=None) -> Contact:
+        return Contact.objects.create(customer=customer, name=name, email=email, phone=phone)
+
+    @staticmethod
+    def remove(*, contact) -> None:
+        # Business Rules 6.1 / ERD §9 note: company-type Customer must
+        # keep at least one Contact. Enforced here, at the only place
+        # a Contact can be removed (service layer, not a DB constraint,
+        # matching the ERD's own reasoning for why this isn't a CHECK).
+        customer = contact.customer
+        if customer.type == CustomerType.COMPANY:
+            remaining = Contact.objects.filter(customer=customer).exclude(id=contact.id).count()
+            if remaining == 0:
+                raise ValueError("Cannot remove the last Contact of a company-type Customer.")
+        contact.delete()
