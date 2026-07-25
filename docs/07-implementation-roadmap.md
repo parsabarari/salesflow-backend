@@ -31,7 +31,7 @@ cross-entity flows that depend on multiple pieces existing together.
       Celery Beat expiry sweep (06-architecture.md §3)
 
 ### 1.2 RBAC
-- [ ] Permission classes implementing the full matrix (PRD 5.3):
+- [x] Permission classes implementing the full matrix (PRD 5.3):
       queryset-level filtering + action-level checks
       (Business Rules 3.1)
 - [x] `reports_to` "team" resolution logic (Business Rules 3.2)
@@ -54,8 +54,8 @@ cross-entity flows that depend on multiple pieces existing together.
       view until Phase 2 lands, or be built last in this phase)
 
 ### 1.4 Tests for Phase 1
-- [ ] Org isolation: cross-org access attempts return 404
-- [ ] Each RBAC matrix cell: at least one test per role × resource
+- [x] Org isolation: cross-org access attempts return 404
+- [x] Each RBAC matrix cell: at least one test per role × resource
       combination in PRD 5.3
 - [x] Every stage-transition rule from Business Rules 5.2 (valid and
       invalid transitions, Lost reopening, Won irreversibility)
@@ -65,78 +65,78 @@ cross-entity flows that depend on multiple pieces existing together.
 ## Phase 2 — Customers, Activities, Ticketing, Collaboration
 
 ### 2.1 Customers
-- [ ] `customers`, `contacts`, `customer_lead_links` models +
+- [x] `customers`, `contacts`, `customer_lead_links` models +
       migrations (04-erd.md §9–11)
-- [ ] Won→Customer linking logic: zero/one/many-match branches
+- [x] Won→Customer linking logic: zero/one/many-match branches
       (Business Rules 5.3), including
       `requires_manual_customer_selection` + `/resolve-customer`
       endpoint (API Spec §4)
-- [ ] Company-type "requires ≥1 Contact" service-layer check
+- [x] Company-type "requires ≥1 Contact" service-layer check
       (ERD §9 note)
-- [ ] Customer/Contact CRUD (no direct Customer creation endpoint —
+- [x] Customer/Contact CRUD (no direct Customer creation endpoint —
       API Spec §6 explicitly excludes it)
 
 ### 2.2 Activities
-- [ ] `activities` model + migration (04-erd.md §12), ContentType
+- [x] `activities` model + migration (04-erd.md §12), ContentType
       parent restricted to Lead/Customer (Business Rules 8.2)
-- [ ] Activity CRUD (API Spec §7)
-- [ ] Overdue/due-soon Celery Beat sweep writing to Notification
+- [x] Activity CRUD (API Spec §7)
+- [x] Overdue/due-soon Celery Beat sweep writing to Notification
       (06-architecture.md §3) — Notification model itself can be
       built now (Phase 2) even though it's only fully consumed in
       Phase 3, so this sweep has somewhere to write to
 
 ### 2.3 Ticketing
-- [ ] `tickets` model + migration (04-erd.md §16), `customer_id`
+- [x] `tickets` model + migration (04-erd.md §16), `customer_id`
       required
-- [ ] Ticket CRUD + status transitions (Business Rules 7.3)
-- [ ] Cross-check: Ticket blocked on Leads with
+- [x] Ticket CRUD + status transitions (Business Rules 7.3)
+- [x] Cross-check: Ticket blocked on Leads with
       `requires_manual_customer_selection = true` until resolved
       (Business Rules 7.1)
 
 ### 2.4 Collaboration
-- [ ] `comments`, `comment_mentions` models + migrations
+- [x] `comments`, `comment_mentions` models + migrations
       (04-erd.md §13–14) — covers Notes/Internal-notes per the
       Domain Model §1 unification decision
-- [ ] Comment CRUD restricted to Lead/Customer/Ticket parents
+- [x] Comment CRUD restricted to Lead/Customer/Ticket parents
       (Business Rules 9.1)
-- [ ] `@mention` parsing on comment creation, writing
+- [x] `@mention` parsing on comment creation, writing
       `CommentMention` rows scoped to org members only
       (Business Rules 9.2) — **notification delivery for mentions is
       explicitly Phase 3, not built here** (PRD 5.9 / Roadmap
       cross-reference)
-- [ ] `attachments` model + migration (04-erd.md §15), S3-compatible
+- [x] `attachments` model + migration (04-erd.md §15), S3-compatible
       storage wiring (06-architecture.md §2)
 
 ### 2.5 Tests for Phase 2
-- [ ] Won-linking: zero-match, one-match, multi-match branches, each
+- [x] Won-linking: zero-match, one-match, multi-match branches, each
       with a dedicated test
-- [ ] Ticket creation rejected when Customer unresolved
-- [ ] Comment/mention parsing: valid member mention, non-member
+- [x] Ticket creation rejected when Customer unresolved
+- [x] Comment/mention parsing: valid member mention, non-member
       mention ignored
 
 ---
 
 ## Phase 3 — Dashboard, Search, Notifications
 
-- [ ] `notifications` model + migration (04-erd.md §17) if not
+- [x] `notifications` model + migration (04-erd.md §17) if not
       already created in Phase 2 for the Activity sweep
-- [ ] Notification triggers wired into every event listed in
+- [x] Notification triggers wired into every event listed in
       Business Rules 10.3 (Lead assignment/stage change, mention,
       Ticket assignment/status change, Activity due/overdue)
-- [ ] Notification endpoints: list, mark-read, mark-all-read
+- [x] Notification endpoints: list, mark-read, mark-all-read
       (API Spec §12)
-- [ ] Mention transactional email (Business Rules 9.3 — reads the
+- [x] Mention transactional email (Business Rules 9.3 — reads the
       `CommentMention` rows already created back in Phase 2)
-- [ ] `GET /dashboard/summary` aggregation endpoint + 60s Redis cache
+- [x] `GET /dashboard/summary` aggregation endpoint + 60s Redis cache
       (API Spec §11, 06-architecture.md §4)
-- [ ] `GET /search` across Leads/Customers/Tickets, RBAC-scoped
+- [x] `GET /search` across Leads/Customers/Tickets, RBAC-scoped
       (API Spec §11)
-- [ ] `audit-logs` read endpoint, Owner/Admin only (API Spec §13)
+- [x] `audit-logs` read endpoint, Owner/Admin only (API Spec §13)
 
 ### Tests for Phase 3
-- [ ] Every notification trigger fires exactly once per event
-- [ ] Dashboard numbers match a hand-computed fixture
-- [ ] Search results respect RBAC visibility (a Sales Agent's search
+- [x] Every notification trigger fires exactly once per event
+- [x] Dashboard numbers match a hand-computed fixture
+- [x] Search results respect RBAC visibility (a Sales Agent's search
       doesn't surface another agent's Leads)
 
 ---
