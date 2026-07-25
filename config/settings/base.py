@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "apps.collaboration",
     "apps.notifications",
     "apps.dashboard",
+    "apps.search",
     "drf_spectacular",
 ]
 
