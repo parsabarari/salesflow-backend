@@ -4,6 +4,7 @@ from rest_framework.test import APIClient
 from apps.accounts.models import User
 from apps.collaboration.models import CommentMention
 from apps.core.context import clear_current_organization, set_current_organization
+from django.core import mail
 from apps.customers.models import Customer, CustomerType
 from apps.leads.models import Lead
 from apps.organizations.models import Membership, MembershipRole, Organization
@@ -160,3 +161,25 @@ class CommentCRUDTests(TestCase):
         )
         response = self.client.delete(self._detail_url(create_response.data["id"]))
         self.assertEqual(response.status_code, 204)
+
+    def test_mention_sends_email_to_visible_member(self):
+        self.client.force_authenticate(user=self.owner.user)
+        self.client.post(
+            self._comments_url(),
+            {"parent_type": "lead", "parent_id": self.lead.id, "body": f"Hey @{self.agent_a.user.email} check this"},
+            format="json",
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(self.agent_a.user.email, mail.outbox[0].to)
+
+    def test_mention_no_email_when_member_lacks_visibility(self):
+        # agent_b has no access to this lead (owned by agent_a) — a
+        # mention of agent_b should skip both the in-app notification
+        # and the email, since RBAC visibility gates both identically.
+        self.client.force_authenticate(user=self.owner.user)
+        self.client.post(
+            self._comments_url(),
+            {"parent_type": "lead", "parent_id": self.lead.id, "body": f"Hey @{self.agent_b.user.email} check this"},
+            format="json",
+        )
+        self.assertEqual(len(mail.outbox), 0)

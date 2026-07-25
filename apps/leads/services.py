@@ -9,7 +9,8 @@ from apps.core.permissions import SCOPE_FULL, SCOPE_OWN, SCOPE_TEAM
 from apps.core.normalization import normalize_email, normalize_phone
 from apps.organizations.services import TeamService
 from apps.customers.services import CustomerService
-
+from apps.notifications.models import NotificationType
+from apps.notifications.services import NotificationService
 
 def normalize_email(email: str | None) -> str | None:
     if not email:
@@ -133,6 +134,9 @@ class LeadStageTransitionService:
             changed_by=changed_by,
             reason=reason,
         )
+        NotificationService.create(
+            recipient_membership=lead.owner, notification_type=NotificationType.LEAD_STAGE_CHANGED, related_object=lead,
+        )
         return lead
     
 
@@ -167,6 +171,9 @@ class LeadService:
         only in the view, so any other creation path silently skipped it."""
         lead = Lead.objects.create(organization=organization, owner=owner, source=source, email=email, phone=phone)
         LeadStageHistory.objects.create(lead=lead, from_stage=None, to_stage=lead.stage, changed_by=owner)
+        NotificationService.create(
+            recipient_membership=owner, notification_type=NotificationType.LEAD_ASSIGNED, related_object=lead,
+        )
         return lead
 
 

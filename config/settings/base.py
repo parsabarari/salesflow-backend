@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "apps.activities",
     "apps.tickets",
     "apps.collaboration",
+    "apps.notifications",
     "drf_spectacular",
 ]
 

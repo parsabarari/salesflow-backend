@@ -16,4 +16,8 @@ app.conf.beat_schedule = {
         "task": "apps.organizations.tasks.expire_pending_invitations_task",
         "schedule": crontab(hour="*/1"),
     },
+    "activity-due-soon-and-overdue-sweep": {
+        "task": "apps.activities.tasks.activity_due_soon_and_overdue_sweep_task",
+        "schedule": crontab(minute="*/15"),
+    },
 }

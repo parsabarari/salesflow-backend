@@ -21,6 +21,8 @@ from apps.leads.services import (LeadDuplicateService, LeadService,
                                  TagService, assert_can_assign_owner,)
 from apps.organizations.models import Membership, MembershipRole
 from apps.customers.services import CustomerService
+from apps.notifications.models import NotificationType
+from apps.notifications.services import NotificationService
 
 # PRD 5.3 matrix, Leads column. Support Agent has no Lead access ("—").
 # Viewer clarified as org-wide read-only (see conversation decision —
@@ -138,6 +140,12 @@ class LeadDetailView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
         for field, value in data.items():
             setattr(lead, field, value)
         lead.save(update_fields=list(data.keys()))
+
+
+        if "owner" in data:
+            NotificationService.create(
+                recipient_membership=lead.owner, notification_type=NotificationType.LEAD_ASSIGNED, related_object=lead,
+            )
 
         response_data = LeadSerializer(lead).data
         if possible_duplicates is not None:

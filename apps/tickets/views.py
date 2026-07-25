@@ -15,6 +15,8 @@ from apps.organizations.services import TeamService
 from apps.tickets.models import Ticket
 from apps.tickets.serializers import TicketCreateSerializer, TicketSerializer, TicketUpdateSerializer
 from apps.tickets.services import TicketService, resolve_contact, resolve_customer
+from apps.notifications.models import NotificationType
+from apps.notifications.services import NotificationService
 
 # PRD 5.3 matrix, Tickets column. Sales Manager's cell reads plain "Read"
 # (no "(team)" qualifier, unlike its Leads/Customers/Activities/Comments
@@ -126,6 +128,11 @@ class TicketListCreateView(OrgScopedViewSetMixin, TicketObjectLookupMixin, APIVi
         except ValueError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+        if ticket.assignee_id:
+            NotificationService.create(
+                recipient_membership=ticket.assignee, notification_type=NotificationType.TICKET_ASSIGNED, related_object=ticket,
+            )
+
         return Response(TicketSerializer(ticket).data, status=status.HTTP_201_CREATED)
 
 
@@ -166,6 +173,10 @@ class TicketDetailView(OrgScopedViewSetMixin, TicketObjectLookupMixin, APIView):
         try:
             if fields:
                 ticket = TicketService.update_fields(ticket, **fields)
+                if "assignee" in fields and ticket.assignee_id:
+                    NotificationService.create(
+                        recipient_membership=ticket.assignee, notification_type=NotificationType.TICKET_ASSIGNED, related_object=ticket,
+                    )
             if "status" in data:
                 ticket = TicketService.transition_status(ticket, data["status"])
         except ValueError as e:

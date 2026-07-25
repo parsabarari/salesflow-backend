@@ -2,6 +2,8 @@ from django.db import transaction
 
 from apps.customers.models import Contact, Customer
 from apps.tickets.models import Ticket, TicketStatus
+from apps.notifications.models import NotificationType
+from apps.notifications.services import NotificationService
 
 # Business Rules 7.3: "Open → In Progress → Resolved → Closed, with
 # Reopened allowed from Resolved or Closed back to Open." Read literally
@@ -93,4 +95,17 @@ class TicketService:
             raise ValueError(f"Cannot transition from '{ticket.status}' to '{to_status}'.")
         ticket.status = to_status
         ticket.save(update_fields=["status"])
+
+        # Business Rules 10.3: notify assignee AND ticket creator, if
+        # different. ASSUMPTION (flagging — PRD's exact wording is
+        # "ticket creator's owner", which doesn't map onto anything in
+        # the current schema: Membership has no "owner" field, only
+        # Lead/Customer/Activity do. Reading this as loose phrasing for
+        # "the Membership that created the ticket" — Ticket.created_by
+        # — since that's the only concept actually resolvable here.
+        recipients = {m for m in (ticket.assignee, ticket.created_by) if m is not None}
+        for recipient in recipients:
+            NotificationService.create(
+                recipient_membership=recipient, notification_type=NotificationType.TICKET_STATUS_CHANGED, related_object=ticket,
+            )
         return ticket

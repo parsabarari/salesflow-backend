@@ -10,6 +10,11 @@ from apps.customers.models import Customer
 from apps.leads.models import Lead
 from apps.organizations.models import Membership
 from apps.tickets.models import Ticket
+from apps.collaboration.permissions import resolve_parent_scope
+from apps.collaboration.tasks import send_mention_email_task
+from apps.core.permissions import SCOPE_NONE
+from apps.notifications.models import NotificationType
+from apps.notifications.services import NotificationService
 
 COMMENT_PARENT_MODEL_MAP = {
     "lead": Lead,
@@ -60,10 +65,18 @@ class CommentService:
         emails = set(MENTION_PATTERN.findall(comment.body))
         if not emails:
             return
-        members = Membership.objects.filter(user__email__in=emails, deleted_at__isnull=True)
+        members = list(Membership.objects.filter(user__email__in=emails, deleted_at__isnull=True))
         CommentMention.objects.bulk_create(
             [CommentMention(comment=comment, mentioned_membership=member) for member in members]
         )
+        parent = comment.parent
+        for member in members:
+            scope = resolve_parent_scope(membership=member, role=member.role, parent=parent)
+            if scope != SCOPE_NONE:
+                NotificationService.create(
+                    recipient_membership=member, notification_type=NotificationType.COMMENT_MENTION, related_object=comment,
+                )
+                send_mention_email_task.delay(comment.id, member.id)
 
 
 class AttachmentService:
