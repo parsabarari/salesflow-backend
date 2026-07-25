@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 
 from apps.activities.models import Activity, ActivityStatus
+from apps.core.services import resolve_polymorphic_parent
 from apps.customers.models import Customer
 from apps.leads.models import Lead
 

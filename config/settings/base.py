@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "apps.customers",
     "apps.activities",
     "apps.tickets",
+    "apps.collaboration",
     "drf_spectacular",
 ]
 
@@ -146,3 +147,38 @@ SPECTACULAR_SETTINGS = {
 }
 
 FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", default="http://localhost:3000")
+
+
+
+# --- Object storage (docs/06-architecture.md §2) ---
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL")
+AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-1")
+
+# MinIO doesn't support virtual-hosted-style bucket addressing
+# (bucket-name.your-endpoint.com) the way real AWS S3 does — it needs
+# path-style (your-endpoint.com/bucket-name) instead.
+AWS_S3_ADDRESSING_STYLE = "path"
+
+# Attachments are private business data, not public assets — every
+# read goes through a short-lived signed URL (API Spec §10), never a
+# permanently-public object URL.
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = True
+AWS_QUERYSTRING_EXPIRE = 3600  # signed URL lifetime, seconds (1 hour)
+
+# Two uploads with the same filename must not silently overwrite each
+# other — each Attachment.file_reference should point at exactly the
+# bytes that were uploaded for it.
+AWS_S3_FILE_OVERWRITE = False
