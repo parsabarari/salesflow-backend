@@ -41,6 +41,9 @@ class Comment(TimeStampedModel, SoftDeleteModel, OrgScopedModel):
 
 class CommentMentionQuerySet(BaseQuerySet):
     def for_current_organization(self):
+        from apps.core.context import is_admin_bypass
+        if is_admin_bypass():
+            return self
         return self.filter(comment__organization_id=get_current_organization())
 
 
