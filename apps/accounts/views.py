@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.accounts.services import (TokenBlocklistService, EmailVerificationService,
                                     PasswordResetService, )
@@ -20,23 +21,18 @@ from apps.accounts.tokens import RefreshToken
 from apps.organizations.services import SignupService
 
 
+@extend_schema_view(post=extend_schema(tags=["Auth"]))
 class LogoutView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
-            return Response(
-                {"detail": "Refresh token is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"detail": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
         try:
             token = RefreshToken(refresh_token)
         except TokenError:
-            return Response(
-                {"detail": "Token is invalid or expired."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+            return Response({"detail": "Token is invalid or expired."}, status=status.HTTP_401_UNAUTHORIZED)
 
         jti = str(token["jti"])
         ttl_seconds = max(int(token["exp"] - time.time()), 0)
@@ -44,11 +40,13 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema_view(post=extend_schema(tags=["Auth"]))
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = [AllowAny]
 
 
+@extend_schema_view(post=extend_schema(tags=["Auth"]))
 class SignupView(APIView):
     permission_classes = [AllowAny]
 
@@ -68,6 +66,7 @@ class SignupView(APIView):
         )
 
 
+@extend_schema_view(post=extend_schema(tags=["Auth"]))
 class EmailVerifyView(APIView):
     permission_classes = [AllowAny]
 
@@ -80,6 +79,7 @@ class EmailVerifyView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
+@extend_schema_view(post=extend_schema(tags=["Auth"]))
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
 
@@ -87,10 +87,10 @@ class PasswordResetRequestView(APIView):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         PasswordResetService.request(**serializer.validated_data)
-        # همیشه ۲۰۰ برمی‌گردانیم، صرف‌نظر از وجود/عدم‌وجود ایمیل
         return Response(status=status.HTTP_200_OK)
 
 
+@extend_schema_view(post=extend_schema(tags=["Auth"]))
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
 

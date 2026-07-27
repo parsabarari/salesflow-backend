@@ -5,6 +5,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.collaboration.models import Attachment, Comment
 from apps.collaboration.permissions import resolve_parent_scope
@@ -20,6 +21,7 @@ from apps.core.views import OrgScopedViewSetMixin
 from apps.organizations.models import MembershipRole
 
 
+@extend_schema_view(get=extend_schema(tags=["Collaboration"]), post=extend_schema(tags=["Collaboration"]))
 class CommentListCreateView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated]
 
@@ -76,6 +78,7 @@ class CommentListCreateView(OrgScopedViewSetMixin, APIView):
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema_view(get=extend_schema(tags=["Collaboration"]), patch=extend_schema(tags=["Collaboration"]), delete=extend_schema(tags=["Collaboration"]))
 class CommentDetailView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated]
 
@@ -121,6 +124,7 @@ class CommentDetailView(OrgScopedViewSetMixin, APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema_view(post=extend_schema(tags=["Collaboration"]))
 class AttachmentCreateView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -159,6 +163,7 @@ class AttachmentCreateView(OrgScopedViewSetMixin, APIView):
         return Response(AttachmentSerializer(attachment).data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema_view(get=extend_schema(tags=["Collaboration"]), delete=extend_schema(tags=["Collaboration"]))
 class AttachmentDetailView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated]
 

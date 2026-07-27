@@ -1,17 +1,18 @@
 from django.contrib import admin
 
+from apps.core.admin import UnscopedFKAdminMixin
 from .models import Invitation, Membership, Organization
 
 
 @admin.register(Organization)
-class OrganizationAdmin(admin.ModelAdmin):
+class OrganizationAdmin(UnscopedFKAdminMixin, admin.ModelAdmin):
     list_display = ("id", "name", "created_at", "deleted_at")
     search_fields = ("name",)
     readonly_fields = ("created_at",)
 
 
 @admin.register(Membership)
-class MembershipAdmin(admin.ModelAdmin):
+class MembershipAdmin(UnscopedFKAdminMixin, admin.ModelAdmin):
     list_display = ("id", "user", "organization", "role", "reports_to", "created_at", "deleted_at")
     list_filter = ("role",)
     search_fields = ("user__email", "organization__name")
@@ -22,7 +23,7 @@ class MembershipAdmin(admin.ModelAdmin):
 
 
 @admin.register(Invitation)
-class InvitationAdmin(admin.ModelAdmin):
+class InvitationAdmin(UnscopedFKAdminMixin, admin.ModelAdmin):
     list_display = ("id", "email", "organization", "role", "status", "expires_at", "created_at")
     list_filter = ("role", "status")
     search_fields = ("email", "organization__name")

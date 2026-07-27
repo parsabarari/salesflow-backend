@@ -143,11 +143,26 @@ SIMPLE_JWT = {
 
 # drf_spectacular
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Ecommerce API",
-    "DESCRIPTION": "Production-ready Ecommerce API built with Django REST Framework.",
+    "TITLE": "SalesFlow CRM API",
+    "DESCRIPTION": "Multi-tenant CRM SaaS backend — internal API consumed by a separately-developed frontend.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "SORT_OPERATIONS": False,
+    "TAGS": [
+        {"name": "Auth", "description": "Signup, login, logout, token refresh, password reset, email verification."},
+        {"name": "Organizations & Members", "description": "Organization settings, memberships, invitations."},
+        {"name": "Leads", "description": "Lead CRUD, pipeline stage transitions, tags, timeline."},
+        {"name": "Customers & Contacts", "description": "Customer and Contact CRUD, Won-lead linking resolution."},
+        {"name": "Activities", "description": "Calls, meetings, tasks, reminders tied to a Lead or Customer."},
+        {"name": "Tickets", "description": "Lightweight customer support ticketing."},
+        {"name": "Collaboration", "description": "Comments, @mentions, file attachments."},
+        {"name": "Notifications", "description": "In-app notification feed."},
+        {"name": "Dashboard", "description": "Aggregated summary metrics."},
+        {"name": "Search", "description": "Global RBAC-scoped search across Leads, Customers, Tickets."},
+        {"name": "Audit Log", "description": "Owner/Admin-only administrative action log."},
+    ],
 }
+
 
 FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", default="http://localhost:3000")
 

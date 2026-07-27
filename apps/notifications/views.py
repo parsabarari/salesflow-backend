@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.core.permissions import get_active_membership
 from apps.core.views import OrgScopedViewSetMixin
@@ -11,6 +12,7 @@ from apps.notifications.serializers import NotificationSerializer
 from apps.notifications.services import NotificationService
 
 
+@extend_schema_view(get=extend_schema(tags=["Notifications"]))
 class NotificationListView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated]
 
@@ -26,6 +28,7 @@ class NotificationListView(OrgScopedViewSetMixin, APIView):
         return Response(NotificationSerializer(queryset, many=True).data)
 
 
+@extend_schema_view(post=extend_schema(tags=["Notifications"]))
 class NotificationMarkReadView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated]
 
@@ -39,6 +42,7 @@ class NotificationMarkReadView(OrgScopedViewSetMixin, APIView):
         return Response(NotificationSerializer(notification).data)
 
 
+@extend_schema_view(post=extend_schema(tags=["Notifications"]))
 class NotificationMarkAllReadView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated]
 

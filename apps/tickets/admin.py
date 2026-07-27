@@ -1,10 +1,11 @@
 from django.contrib import admin
 
+from apps.core.admin import UnscopedFKAdminMixin
 from apps.tickets.models import Ticket
 
 
 @admin.register(Ticket)
-class TicketAdmin(admin.ModelAdmin):
+class TicketAdmin(UnscopedFKAdminMixin, admin.ModelAdmin):
     list_display = ("id", "subject", "customer", "status", "priority", "assignee", "created_at")
     list_filter = ("status", "priority")
     search_fields = ("subject",)

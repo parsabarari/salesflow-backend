@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.core.permissions import (
     RoleMatrixPermission, SCOPE_FULL, SCOPE_NONE, SCOPE_READONLY_ORG, SCOPE_TEAM,
@@ -79,6 +80,7 @@ class TicketObjectLookupMixin(RoleScopedQuerysetMixin):
             raise Http404()
 
 
+@extend_schema_view(get=extend_schema(tags=["Tickets"]), post=extend_schema(tags=["Tickets"]))
 class TicketListCreateView(OrgScopedViewSetMixin, TicketObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = TICKET_ROLE_SCOPE_MAP
@@ -136,6 +138,7 @@ class TicketListCreateView(OrgScopedViewSetMixin, TicketObjectLookupMixin, APIVi
         return Response(TicketSerializer(ticket).data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema_view(get=extend_schema(tags=["Tickets"]), patch=extend_schema(tags=["Tickets"]), delete=extend_schema(tags=["Tickets"]))
 class TicketDetailView(OrgScopedViewSetMixin, TicketObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = TICKET_ROLE_SCOPE_MAP

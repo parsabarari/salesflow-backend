@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.core.permissions import IsOwnerOrAdmin
 from apps.core.views import OrgScopedViewSetMixin
@@ -21,12 +21,12 @@ from apps.organizations.services import InvitationService, MembershipService
 class InvitationListCreateView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
-    @extend_schema(responses={200: InvitationSerializer(many=True)})
+    @extend_schema(tags=["Organizations & Members"], responses={200: InvitationSerializer(many=True)})
     def get(self, request, organization_id):
         invitations = Invitation.objects.all()
         return Response(InvitationSerializer(invitations, many=True).data)
 
-    @extend_schema(request=CreateInvitationSerializer, responses={201: InvitationSerializer})
+    @extend_schema(tags=["Organizations & Members"], request=CreateInvitationSerializer, responses={201: InvitationSerializer})
     def post(self, request, organization_id):
         serializer = CreateInvitationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -46,13 +46,14 @@ class InvitationListCreateView(OrgScopedViewSetMixin, APIView):
 class InvitationResendView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
-    @extend_schema(responses={200: InvitationSerializer})
+    @extend_schema(tags=["Organizations & Members"], responses={200: InvitationSerializer})
     def post(self, request, organization_id, invitation_id):
         invitation = Invitation.objects.get(id=invitation_id)
         InvitationService.resend(invitation)
         return Response(InvitationSerializer(invitation).data)
 
 
+@extend_schema_view(delete=extend_schema(tags=["Organizations & Members"]))
 class MembershipDetailView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
@@ -62,7 +63,7 @@ class MembershipDetailView(OrgScopedViewSetMixin, APIView):
         except Membership.DoesNotExist:
             raise Http404()
 
-    @extend_schema(request=UpdateMembershipSerializer, responses={200: MembershipSerializer})
+    @extend_schema(tags=["Organizations & Members"], request=UpdateMembershipSerializer, responses={200: MembershipSerializer})
     def patch(self, request, organization_id, membership_id):
         target_membership = self._get_target(membership_id)
         serializer = UpdateMembershipSerializer(data=request.data)
@@ -106,7 +107,7 @@ class MembershipDetailView(OrgScopedViewSetMixin, APIView):
 class InvitationAcceptView(APIView):
     permission_classes = [AllowAny]
 
-    @extend_schema(request=AcceptInvitationSerializer, responses={200: dict})
+    @extend_schema(tags=["Auth"], request=AcceptInvitationSerializer, responses={200: dict})
     def post(self, request, token):
         serializer = AcceptInvitationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -121,4 +122,3 @@ class InvitationAcceptView(APIView):
             {"organization_id": membership.organization_id, "role": membership.role},
             status=status.HTTP_200_OK,
         )
-    

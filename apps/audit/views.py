@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.audit.models import AuditLog
 from apps.audit.serializers import AuditLogSerializer
@@ -8,6 +9,7 @@ from apps.core.views import OrgScopedViewSetMixin
 from rest_framework.permissions import IsAuthenticated
 
 
+@extend_schema_view(get=extend_schema(tags=["Audit Log"]))
 class AuditLogListView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
