@@ -3,7 +3,7 @@ from contextvars import ContextVar
 _current_organization_id: ContextVar[int | None] = ContextVar(
     "current_organization_id", default=None
 )
-_admin_bypass: ContextVar[bool] = ContextVar("admin_bypass", default=False)
+_unscoped_mode: ContextVar[bool] = ContextVar("unscoped_mode", default=False)
 
 
 def set_current_organization(organization_id: int) -> None:
@@ -25,23 +25,33 @@ def clear_current_organization() -> None:
     _current_organization_id.set(None)
 
 
-def enable_admin_bypass() -> None:
-    """Django's admin internals call a model's plain default manager
-    directly from several different internal code paths (formset pk
-    field construction, empty_form media generation, and others) that
-    can never be reached by overriding any ModelAdmin/InlineModelAdmin
-    method — they run before, or entirely outside, any admin hook.
-    Rather than patching each new Django-internal call site as it
-    surfaces, every org-scoped manager checks this flag and behaves as
-    globally unscoped for the duration of an admin request. Admin is
-    superuser-only, so this is a deliberate, contained exception to the
-    normal fail-closed behavior everywhere else in the app."""
-    _admin_bypass.set(True)
+def enable_unscoped_mode() -> None:
+    """A narrow, deliberate escape hatch — while active, org-scoped
+    managers treat themselves as globally unscoped. Nothing in this
+    module knows or cares what turns this on; apps/core/middleware.py
+    is the only caller, restricted to /admin/ requests. No manager or
+    queryset anywhere references HTTP concepts — they only ever check
+    this boolean."""
+    _unscoped_mode.set(True)
 
 
-def disable_admin_bypass() -> None:
-    _admin_bypass.set(False)
+def disable_unscoped_mode() -> None:
+    _unscoped_mode.set(False)
 
 
-def is_admin_bypass() -> bool:
-    return _admin_bypass.get()
+def is_unscoped_mode() -> bool:
+    return _unscoped_mode.get()
+
+
+def organization_scope_filter(field_path: str) -> dict:
+    """Single shared helper — every org-scoped manager and every
+    'child of a parent' queryset (LeadStageHistory, Contact,
+    CustomerLeadLink, CommentMention, Notification) calls this instead
+    of each hand-rolling its own `if is_unscoped_mode(): ...` branch.
+    field_path is the ORM lookup reaching organization_id, e.g.
+    "organization_id" directly, or "lead__organization_id" through a
+    parent. A brand-new manager written against this helper gets the
+    admin bypass automatically, for free, with no risk of forgetting it."""
+    if is_unscoped_mode():
+        return {}
+    return {field_path: get_current_organization()}

@@ -1,7 +1,6 @@
 from django.db import models
-from django.utils import timezone
 
-from apps.core.context import get_current_organization, get_current_organization_or_none, is_admin_bypass
+from apps.core.context import get_current_organization_or_none, organization_scope_filter
 
 
 class BaseQuerySet(models.QuerySet):
@@ -45,25 +44,17 @@ class OrgScopedCreateMixin:
 class OrgScopedManager(OrgScopedCreateMixin, models.Manager.from_queryset(BaseQuerySet)):
     def get_queryset(self):
         queryset = super().get_queryset().filter(deleted_at__isnull=True)
-        if is_admin_bypass():
-            return queryset
-        return queryset.filter(organization_id=get_current_organization())
+        return queryset.filter(**organization_scope_filter("organization_id"))
 
 
 class OrgScopedAllManager(OrgScopedCreateMixin, models.Manager.from_queryset(BaseQuerySet)):
     def get_queryset(self):
-        queryset = super().get_queryset()
-        if is_admin_bypass():
-            return queryset
-        return queryset.filter(organization_id=get_current_organization())
+        return super().get_queryset().filter(**organization_scope_filter("organization_id"))
 
 
 class OrgScopedNoSoftDeleteManager(OrgScopedCreateMixin, models.Manager.from_queryset(BaseQuerySet)):
     def get_queryset(self):
-        queryset = super().get_queryset()
-        if is_admin_bypass():
-            return queryset
-        return queryset.filter(organization_id=get_current_organization())
+        return super().get_queryset().filter(**organization_scope_filter("organization_id"))
 
 
 class UnscopedManager(models.Manager.from_queryset(BaseQuerySet)):

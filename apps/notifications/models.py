@@ -19,10 +19,8 @@ class NotificationType(models.TextChoices):
 
 class NotificationQuerySet(BaseQuerySet):
     def for_current_organization(self):
-        from apps.core.context import is_admin_bypass
-        if is_admin_bypass():
-            return self
-        return self.filter(recipient_membership__organization_id=get_current_organization())
+        from apps.core.context import organization_scope_filter
+        return self.filter(**organization_scope_filter("recipient_membership__organization_id"))
 
 
 class NotificationManager(models.Manager.from_queryset(NotificationQuerySet)):
