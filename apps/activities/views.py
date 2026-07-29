@@ -60,7 +60,10 @@ class ActivityObjectLookupMixin(RoleScopedQuerysetMixin):
             raise Http404()
 
 
-@extend_schema_view(get=extend_schema(tags=["Activities"]), post=extend_schema(tags=["Activities"]))
+@extend_schema_view(
+    get=extend_schema(tags=["Activities"]),
+    post=extend_schema(tags=["Activities"], request=ActivityCreateSerializer),
+)
 class ActivityListCreateView(OrgScopedViewSetMixin, ActivityObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = ACTIVITY_ROLE_SCOPE_MAP
@@ -138,7 +141,11 @@ class ActivityListCreateView(OrgScopedViewSetMixin, ActivityObjectLookupMixin, A
         return Response(ActivitySerializer(activity).data, status=status.HTTP_201_CREATED)
 
 
-@extend_schema_view(get=extend_schema(tags=["Activities"]), patch=extend_schema(tags=["Activities"]), delete=extend_schema(tags=["Activities"]))
+@extend_schema_view(
+    get=extend_schema(tags=["Activities"]),
+    patch=extend_schema(tags=["Activities"], request=ActivityUpdateSerializer),
+    delete=extend_schema(tags=["Activities"]),
+)
 class ActivityDetailView(OrgScopedViewSetMixin, ActivityObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = ACTIVITY_ROLE_SCOPE_MAP

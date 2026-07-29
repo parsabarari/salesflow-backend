@@ -16,12 +16,13 @@ from apps.accounts.serializers import (
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     SignupSerializer,
+    LogoutSerializer,
 )
 from apps.accounts.tokens import RefreshToken
 from apps.organizations.services import SignupService
 
 
-@extend_schema_view(post=extend_schema(tags=["Auth"]))
+@extend_schema_view(post=extend_schema(tags=["Auth"], request=LogoutSerializer))
 class LogoutView(APIView):
     permission_classes = [AllowAny]
 
@@ -46,7 +47,7 @@ class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
 
 
-@extend_schema_view(post=extend_schema(tags=["Auth"]))
+@extend_schema_view(post=extend_schema(tags=["Auth"], request=SignupSerializer))
 class SignupView(APIView):
     permission_classes = [AllowAny]
 
@@ -66,7 +67,7 @@ class SignupView(APIView):
         )
 
 
-@extend_schema_view(post=extend_schema(tags=["Auth"]))
+@extend_schema_view(post=extend_schema(tags=["Auth"], request=EmailVerifySerializer))
 class EmailVerifyView(APIView):
     permission_classes = [AllowAny]
 
@@ -79,7 +80,7 @@ class EmailVerifyView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-@extend_schema_view(post=extend_schema(tags=["Auth"]))
+@extend_schema_view(post=extend_schema(tags=["Auth"], request=PasswordResetRequestSerializer))
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
 
@@ -90,7 +91,7 @@ class PasswordResetRequestView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-@extend_schema_view(post=extend_schema(tags=["Auth"]))
+@extend_schema_view(post=extend_schema(tags=["Auth"], request=PasswordResetConfirmSerializer))
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
 

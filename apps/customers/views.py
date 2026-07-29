@@ -59,7 +59,11 @@ class CustomerListView(OrgScopedViewSetMixin, APIView):
         return Response(CustomerSerializer(queryset, many=True).data)
 
 
-@extend_schema_view(get=extend_schema(tags=["Customers & Contacts"]), patch=extend_schema(tags=["Customers & Contacts"]), delete=extend_schema(tags=["Customers & Contacts"]))
+@extend_schema_view(
+    get=extend_schema(tags=["Customers & Contacts"]),
+    patch=extend_schema(tags=["Customers & Contacts"], request=CustomerUpdateSerializer),
+    delete=extend_schema(tags=["Customers & Contacts"]),
+)
 class CustomerDetailView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = CUSTOMER_ROLE_SCOPE_MAP
@@ -107,7 +111,11 @@ class CustomerDetailView(OrgScopedViewSetMixin, APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@extend_schema_view(get=extend_schema(tags=["Customers & Contacts"]), post=extend_schema(tags=["Customers & Contacts"]))
+
+@extend_schema_view(
+    get=extend_schema(tags=["Customers & Contacts"]),
+    post=extend_schema(tags=["Customers & Contacts"], request=ContactCreateSerializer),
+)
 class ContactListCreateView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = CUSTOMER_ROLE_SCOPE_MAP
@@ -129,7 +137,10 @@ class ContactListCreateView(OrgScopedViewSetMixin, APIView):
         return Response(ContactSerializer(contact).data, status=status.HTTP_201_CREATED)
 
 
-@extend_schema_view(patch=extend_schema(tags=["Customers & Contacts"]), delete=extend_schema(tags=["Customers & Contacts"]))
+@extend_schema_view(
+    patch=extend_schema(tags=["Customers & Contacts"], request=ContactCreateSerializer),
+    delete=extend_schema(tags=["Customers & Contacts"]),
+)
 class ContactDetailView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = CUSTOMER_ROLE_SCOPE_MAP
