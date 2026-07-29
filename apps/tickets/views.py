@@ -80,7 +80,10 @@ class TicketObjectLookupMixin(RoleScopedQuerysetMixin):
             raise Http404()
 
 
-@extend_schema_view(get=extend_schema(tags=["Tickets"]), post=extend_schema(tags=["Tickets"]))
+@extend_schema_view(
+    get=extend_schema(tags=["Tickets"]),
+    post=extend_schema(tags=["Tickets"], request=TicketCreateSerializer),
+)
 class TicketListCreateView(OrgScopedViewSetMixin, TicketObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = TICKET_ROLE_SCOPE_MAP
@@ -138,7 +141,11 @@ class TicketListCreateView(OrgScopedViewSetMixin, TicketObjectLookupMixin, APIVi
         return Response(TicketSerializer(ticket).data, status=status.HTTP_201_CREATED)
 
 
-@extend_schema_view(get=extend_schema(tags=["Tickets"]), patch=extend_schema(tags=["Tickets"]), delete=extend_schema(tags=["Tickets"]))
+@extend_schema_view(
+    get=extend_schema(tags=["Tickets"]),
+    patch=extend_schema(tags=["Tickets"], request=TicketUpdateSerializer),
+    delete=extend_schema(tags=["Tickets"]),
+)
 class TicketDetailView(OrgScopedViewSetMixin, TicketObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = TICKET_ROLE_SCOPE_MAP

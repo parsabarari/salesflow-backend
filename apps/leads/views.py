@@ -1,10 +1,10 @@
 from django.http import Http404
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import status, serializers as drf_serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 
 from apps.core.permissions import (
     RoleMatrixPermission, SCOPE_FULL, SCOPE_NONE, SCOPE_OWN, SCOPE_READONLY_ORG, SCOPE_TEAM,
@@ -60,7 +60,10 @@ class LeadObjectLookupMixin(RoleScopedQuerysetMixin):
             raise Http404()
 
 
-@extend_schema_view(get=extend_schema(tags=["Leads"]), post=extend_schema(tags=["Leads"]))
+@extend_schema_view(
+    get=extend_schema(tags=["Leads"]),
+    post=extend_schema(tags=["Leads"], request=LeadCreateSerializer),
+)
 class LeadListCreateView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = LEAD_ROLE_SCOPE_MAP
@@ -104,7 +107,11 @@ class LeadListCreateView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView
         return Response(response_data, status=status.HTTP_201_CREATED)
 
 
-@extend_schema_view(get=extend_schema(tags=["Leads"]), patch=extend_schema(tags=["Leads"]), delete=extend_schema(tags=["Leads"]))
+@extend_schema_view(
+    get=extend_schema(tags=["Leads"]),
+    patch=extend_schema(tags=["Leads"], request=LeadUpdateSerializer),
+    delete=extend_schema(tags=["Leads"]),
+)
 class LeadDetailView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = LEAD_ROLE_SCOPE_MAP
@@ -165,7 +172,7 @@ class LeadDetailView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@extend_schema_view(post=extend_schema(tags=["Leads"]))
+@extend_schema_view(post=extend_schema(tags=["Leads"], request=LeadStageTransitionSerializer))
 class LeadStageTransitionView(IdempotentPostMixin, OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = LEAD_ROLE_SCOPE_MAP
@@ -206,7 +213,10 @@ class LeadTimelineView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
         return Response(LeadTimelineEventSerializer(events, many=True).data)
     
 
-@extend_schema_view(get=extend_schema(tags=["Leads"]), post=extend_schema(tags=["Leads"]))
+@extend_schema_view(
+    get=extend_schema(tags=["Leads"]),
+    post=extend_schema(tags=["Leads"], request=TagCreateSerializer),
+)
 class TagListCreateView(OrgScopedViewSetMixin, APIView):
     permission_classes = [IsAuthenticated]
 
@@ -230,7 +240,12 @@ class TagListCreateView(OrgScopedViewSetMixin, APIView):
         return Response(TagSerializer(tag).data, status=status.HTTP_201_CREATED)
 
 
-@extend_schema_view(post=extend_schema(tags=["Leads"]), delete=extend_schema(tags=["Leads"]))
+@extend_schema_view(
+    post=extend_schema(
+        tags=["Leads"],
+        request=inline_serializer(name="AttachTag", fields={"tag_id": drf_serializers.IntegerField()}),
+    ),
+)
 class LeadTagAttachView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = LEAD_ROLE_SCOPE_MAP
@@ -260,7 +275,7 @@ class LeadTagAttachView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@extend_schema_view(post=extend_schema(tags=["Leads"]))
+@extend_schema_view(post=extend_schema(tags=["Leads"], request=ResolveCustomerSerializer))
 class LeadResolveCustomerView(OrgScopedViewSetMixin, LeadObjectLookupMixin, APIView):
     permission_classes = [IsAuthenticated, RoleMatrixPermission]
     role_scope_map = LEAD_ROLE_SCOPE_MAP
