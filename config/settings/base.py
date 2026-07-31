@@ -169,6 +169,24 @@ FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", default="http://localhos
 
 
 
+# --- Email (transactional only — invitations, password reset, mentions;
+#     docs/06-architecture.md §3). Default backend here is real SMTP;
+#     config/settings/dev.py overrides EMAIL_BACKEND to the console
+#     backend for local dev. prod.py intentionally does NOT override
+#     these, so it inherits real SMTP delivery straight from env vars —
+#     previously these vars were only defined in .env.example and never
+#     actually read anywhere, so a prod deploy would have silently used
+#     Django's own default backend instead of the configured SMTP host. ---
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "webmaster@localhost")
+
+
+
 # --- Object storage (docs/06-architecture.md §2) ---
 STORAGES = {
     "default": {
