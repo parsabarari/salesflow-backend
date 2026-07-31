@@ -14,7 +14,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "expire-pending-invitations": {
         "task": "apps.organizations.tasks.expire_pending_invitations_task",
-        "schedule": crontab(hour="*/1"),
+        "schedule": crontab(minute=0, hour=0),  # daily at midnight — docs/06-architecture.md §3
     },
     "activity-due-soon-and-overdue-sweep": {
         "task": "apps.activities.tasks.activity_due_soon_and_overdue_sweep_task",
