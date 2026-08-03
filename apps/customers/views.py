@@ -1,5 +1,6 @@
 from django.http import Http404
 from django.utils import timezone
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -173,3 +174,32 @@ class ContactDetailView(OrgScopedViewSetMixin, APIView):
         except ValueError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CustomerListView(OrgScopedViewSetMixin, APIView):
+    permission_classes = [IsAuthenticated, RoleMatrixPermission]
+    role_scope_map = CUSTOMER_ROLE_SCOPE_MAP
+
+    def get(self, request, organization_id):
+        queryset = Customer.objects.all()
+        scope = request.rbac_scope
+        membership = request.membership
+
+        if scope in (SCOPE_FULL, SCOPE_READONLY_ORG):
+            pass
+        elif scope == SCOPE_OWN:
+            queryset = queryset.filter(lead_links__lead__owner=membership).distinct()
+        elif scope == SCOPE_TEAM:
+            team_ids = TeamService.team_membership_ids(membership) + [membership.id]
+            queryset = queryset.filter(lead_links__lead__owner_id__in=team_ids).distinct()
+        else:
+            queryset = queryset.none()
+
+        params = request.query_params
+        if params.get("type"):
+            queryset = queryset.filter(type=params["type"])
+        if params.get("search"):
+            search = params["search"]
+            queryset = queryset.filter(Q(name__icontains=search) | Q(email__icontains=search))
+
+        return Response(CustomerSerializer(queryset, many=True).data)

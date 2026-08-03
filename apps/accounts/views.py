@@ -1,7 +1,7 @@
 import time
 
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
@@ -20,6 +20,7 @@ from apps.accounts.serializers import (
 )
 from apps.accounts.tokens import RefreshToken
 from apps.organizations.services import SignupService
+from apps.organizations.models import Membership
 
 
 @extend_schema_view(post=extend_schema(tags=["Auth"], request=LogoutSerializer))
@@ -102,3 +103,38 @@ class PasswordResetConfirmView(APIView):
         if not ok:
             return Response({"detail": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK)
+
+
+
+@extend_schema_view(get=extend_schema(tags=["Auth"]))
+class MeView(APIView):
+    """05-api-spec.md §2 — current User + active Membership/role. Since
+    this endpoint sits under /auth/ (no organization_id in the URL,
+    unlike every other endpoint in this codebase), there's no single
+    'current org' to resolve against. Returns every organization the
+    user currently belongs to instead, so a client can discover
+    organization_id/membership_id without needing them already —
+    closing the gap previously noted (that discovery depended entirely
+    on the signup/invitation response or Django Admin)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        memberships = (
+            Membership.unscoped
+            .filter(user=request.user, deleted_at__isnull=True)
+            .select_related("organization")
+        )
+        return Response({
+            "user_id": request.user.id,
+            "email": request.user.email,
+            "is_email_verified": request.user.is_email_verified,
+            "memberships": [
+                {
+                    "membership_id": m.id,
+                    "organization_id": m.organization_id,
+                    "organization_name": m.organization.name,
+                    "role": m.role,
+                }
+                for m in memberships
+            ],
+        })
