@@ -66,3 +66,37 @@ class CustomerContactCRUDTests(TestCase):
         response = self.client.patch(url, {"name": "Acme Corp Renamed"}, format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["name"], "Acme Corp Renamed")
+
+
+    def test_filter_by_type(self):
+        set_current_organization(self.organization.id)
+        try:
+            individual = Customer.objects.create(
+                organization=self.organization, type=CustomerType.INDIVIDUAL, name="Jane Solo", email="jane@solo.com",
+            )
+        finally:
+            clear_current_organization()
+
+        self.client.force_authenticate(user=self.owner.user)
+        response = self.client.get(f"/api/v1/organizations/{self.organization.id}/customers/?type=individual")
+        ids = {c["id"] for c in response.data}
+        self.assertEqual(ids, {individual.id})
+
+    def test_search_by_name(self):
+        self.client.force_authenticate(user=self.owner.user)
+        response = self.client.get(f"/api/v1/organizations/{self.organization.id}/customers/?search=Acme")
+        ids = {c["id"] for c in response.data}
+        self.assertEqual(ids, {self.customer.id})
+
+    def test_search_by_email_no_match_returns_empty(self):
+        self.client.force_authenticate(user=self.owner.user)
+        response = self.client.get(f"/api/v1/organizations/{self.organization.id}/customers/?search=nonexistent")
+        self.assertEqual(response.data, [])
+
+    def test_search_respects_rbac_scope(self):
+        # agent_b has no visibility into self.customer (no linked lead of
+        # theirs) — search must not bypass the scope filtering already
+        # applied above it.
+        self.client.force_authenticate(user=self.agent_b.user)
+        response = self.client.get(f"/api/v1/organizations/{self.organization.id}/customers/?search=Acme")
+        self.assertEqual(response.data, [])

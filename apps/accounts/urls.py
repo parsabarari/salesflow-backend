@@ -5,6 +5,7 @@ from apps.accounts.views import (
     EmailVerifyView,
     LoginView,
     LogoutView,
+    MeView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
     SignupView,
@@ -17,9 +18,9 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("me/", MeView.as_view(), name="me"),
     path("password-reset/request/", PasswordResetRequestView.as_view(), name="password_reset_request"),
     path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
     path("email/verify/", EmailVerifyView.as_view(), name="email_verify"),
     path("invitations/<str:token>/accept/", InvitationAcceptView.as_view(), name="invitation-accept"),
-
 ]

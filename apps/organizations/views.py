@@ -16,6 +16,8 @@ from apps.organizations.serializers import (
     UpdateMembershipSerializer,
 )
 from apps.organizations.services import InvitationService, MembershipService
+from apps.core.permissions import RoleMatrixPermission, SCOPE_FULL, SCOPE_NONE, SCOPE_READONLY_ORG
+from apps.organizations.models import Invitation, Membership, MembershipRole
 
 
 class InvitationListCreateView(OrgScopedViewSetMixin, APIView):
@@ -122,3 +124,43 @@ class InvitationAcceptView(APIView):
             {"organization_id": membership.organization_id, "role": membership.role},
             status=status.HTTP_200_OK,
         )
+
+
+# PRD 5.3 matrix, "Org settings / Members" column. Viewer's cell isn't
+# explicitly filled in that row of the table — treated as SCOPE_NONE
+# here, consistent with every other "—" cell elsewhere in the matrix.
+# Flagging as a judgment call, same as similar gaps already noted
+# elsewhere in this codebase (e.g. apps/tickets/views.py).
+MEMBERSHIP_ROLE_SCOPE_MAP = {
+    MembershipRole.OWNER: SCOPE_FULL,
+    MembershipRole.ADMIN: SCOPE_FULL,
+    MembershipRole.SALES_MANAGER: SCOPE_READONLY_ORG,
+    MembershipRole.SALES_AGENT: SCOPE_NONE,
+    MembershipRole.SUPPORT_AGENT: SCOPE_NONE,
+    MembershipRole.VIEWER: SCOPE_NONE,
+}
+
+
+@extend_schema_view(get=extend_schema(tags=["Organizations & Members"], responses={200: MembershipSerializer(many=True)}))
+class MembershipListView(OrgScopedViewSetMixin, APIView):
+    permission_classes = [IsAuthenticated, RoleMatrixPermission]
+    role_scope_map = MEMBERSHIP_ROLE_SCOPE_MAP
+
+    def get(self, request, organization_id):
+        params = request.query_params
+        is_active_param = params.get("is_active")
+
+        # is_active is derived from deleted_at (Membership.is_active
+        # doesn't exist as a real column — 04-erd.md's cross-cutting
+        # decision #2 removed it in favor of deleted_at alone). Default
+        # manager (Membership.objects) already excludes soft-deleted
+        # rows, so is_active=false needs the unfiltered manager instead.
+        if is_active_param is not None and is_active_param.lower() == "false":
+            queryset = Membership.all_objects.filter(deleted_at__isnull=False)
+        else:
+            queryset = Membership.objects.all()
+
+        if params.get("role"):
+            queryset = queryset.filter(role=params["role"])
+
+        return Response(MembershipSerializer(queryset, many=True).data)
