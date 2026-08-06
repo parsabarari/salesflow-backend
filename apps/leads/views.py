@@ -63,53 +63,6 @@ class LeadObjectLookupMixin(RoleScopedQuerysetMixin):
 
 @extend_schema_view(
     get=extend_schema(tags=["Leads"]),
-    post=extend_schema(tags=["Leads"], request=LeadCreateSerializer),
-)
-class LeadListCreateView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView):
-    permission_classes = [IsAuthenticated, RoleMatrixPermission]
-    role_scope_map = LEAD_ROLE_SCOPE_MAP
-    owner_field = "owner"
-
-    def get_base_queryset(self):
-        # Business Rules 4.1: archived Leads excluded from default list
-        # views. (?include_archived=true filter param: deferred — flagging
-        # as an open item, not yet implemented in this step.)
-        return Lead.objects.filter(is_archived=False)
-
-    def get(self, request, organization_id):
-        return Response(LeadSerializer(self.get_queryset(), many=True).data)
-
-    def post(self, request, organization_id):
-        serializer = LeadCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-
-        try:
-            target_owner = _resolve_owner(data["owner_id"])
-            assert_can_assign_owner(
-                actor_membership=request.membership, target_owner=target_owner, scope=request.rbac_scope,
-            )
-        except ValueError as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        lead = LeadService.create_lead(
-            organization=request.membership.organization,
-            owner=target_owner,
-            source=data["source"],
-            email=data.get("email"),
-            phone=data.get("phone"),
-        )
-
-        possible_duplicates = LeadDuplicateService.find_possible_duplicates(
-            email=lead.email, phone=lead.phone, exclude_lead_id=lead.id,
-        )
-        response_data = LeadSerializer(lead).data
-        response_data["possible_duplicates"] = possible_duplicates  # Business Rules 4.3
-        return Response(response_data, status=status.HTTP_201_CREATED)
-
-
-@extend_schema_view(
-    get=extend_schema(tags=["Leads"]),
     patch=extend_schema(tags=["Leads"], request=LeadUpdateSerializer),
     delete=extend_schema(tags=["Leads"]),
 )
