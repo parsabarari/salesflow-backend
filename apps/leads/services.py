@@ -12,24 +12,6 @@ from apps.customers.services import CustomerService
 from apps.notifications.models import NotificationType
 from apps.notifications.services import NotificationService
 
-def normalize_email(email: str | None) -> str | None:
-    if not email:
-        return None
-    return email.strip().lower()
-
-
-def normalize_phone(phone: str | None) -> str | None:
-    """Business Rules 4.3: strip formatting before comparison. The rule's
-    own example ('+1 (555) 123-4567' vs '5551234567') requires more than
-    stripping spaces/dashes/parens — it also needs the leading NANP
-    country code normalized away, or those two never match."""
-    if not phone:
-        return None
-    digits = re.sub(r"\D", "", phone)
-    if len(digits) == 11 and digits.startswith("1"):
-        digits = digits[1:]
-    return digits
-
 
 class LeadDuplicateService:
     """Business Rules 4.3 — non-blocking duplicate warning.
