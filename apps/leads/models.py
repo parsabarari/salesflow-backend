@@ -2,7 +2,6 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Now
 
-from apps.core.context import get_current_organization
 from apps.core.managers import (
     BaseQuerySet,
     OrgScopedAllManager,
