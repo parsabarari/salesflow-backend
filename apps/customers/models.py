@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models import Q
 
-from apps.core.context import get_current_organization
 from apps.core.managers import BaseQuerySet, OrgScopedAllManager, OrgScopedManager, UnscopedManager
 from apps.core.models import CIEmailField, OrgScopedModel, SoftDeleteModel, TimeStampedModel
 

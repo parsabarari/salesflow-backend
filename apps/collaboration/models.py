@@ -2,7 +2,6 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from apps.core.context import get_current_organization
 from apps.core.managers import BaseQuerySet, OrgScopedAllManager, OrgScopedManager, UnscopedManager
 from apps.core.models import OrgScopedModel, SoftDeleteModel, TimeStampedModel
 
