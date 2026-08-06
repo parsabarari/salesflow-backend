@@ -126,3 +126,22 @@ class AttachmentTests(TestCase):
             self.assertIsNotNone(Attachment.all_objects.get(id=attachment_id).deleted_at)
         finally:
             clear_current_organization()
+
+
+def test_viewer_cannot_delete_attachment(self):
+    viewer = Membership.objects.create(
+        user=User.objects.create_user(email="viewer@example.com", password="secret"),
+        organization=self.organization,
+        role=MembershipRole.VIEWER,
+    )
+    self.client.force_authenticate(user=self.owner.user)
+    create_response = self.client.post(
+        self._upload_url(),
+        {"parent_type": "lead", "parent_id": self.lead.id, "file": self._file()},
+        format="multipart",
+    )
+    attachment_id = create_response.data["id"]
+
+    self.client.force_authenticate(user=viewer.user)
+    response = self.client.delete(self._detail_url(attachment_id))
+    self.assertEqual(response.status_code, 403)
