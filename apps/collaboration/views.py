@@ -198,17 +198,19 @@ class AttachmentDetailView(OrgScopedViewSetMixin, APIView):
         scope = resolve_parent_scope(membership=request.membership, role=request.membership.role, parent=parent)
         if scope == SCOPE_NONE:
             raise Http404()
-        return attachment
+        return attachment, scope
 
     def get(self, request, organization_id, attachment_id):
         request.membership = get_active_membership(request)
-        attachment = self._get_visible_attachment(request, attachment_id)
+        attachment, _scope = self._get_visible_attachment(request, attachment_id)
         data = AttachmentSerializer(attachment).data
         data["url"] = AttachmentService.get_signed_url(attachment)
         return Response(data)
 
     def delete(self, request, organization_id, attachment_id):
         request.membership = get_active_membership(request)
-        attachment = self._get_visible_attachment(request, attachment_id)
+        attachment, scope = self._get_visible_attachment(request, attachment_id)
+        if scope == SCOPE_READONLY_ORG:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         attachment.delete()  # soft delete
         return Response(status=status.HTTP_204_NO_CONTENT)
