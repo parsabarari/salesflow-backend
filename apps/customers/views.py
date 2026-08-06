@@ -34,32 +34,6 @@ CUSTOMER_ROLE_SCOPE_MAP = {
 }
 
 
-@extend_schema_view(get=extend_schema(tags=["Customers & Contacts"]))
-class CustomerListView(OrgScopedViewSetMixin, APIView):
-    permission_classes = [IsAuthenticated, RoleMatrixPermission]
-    role_scope_map = CUSTOMER_ROLE_SCOPE_MAP
-
-    def get(self, request, organization_id):
-        queryset = Customer.objects.all()
-        scope = request.rbac_scope
-        membership = request.membership
-
-        if scope in (SCOPE_FULL, SCOPE_READONLY_ORG):
-            pass
-        elif scope == SCOPE_OWN:
-            # ASSUMPTION (flagging, not a copy of an existing pattern):
-            # "own leads' customers" = Customers reached via at least
-            # one CustomerLeadLink to a Lead this Agent owns.
-            queryset = queryset.filter(lead_links__lead__owner=membership).distinct()
-        elif scope == SCOPE_TEAM:
-            team_ids = TeamService.team_membership_ids(membership) + [membership.id]
-            queryset = queryset.filter(lead_links__lead__owner_id__in=team_ids).distinct()
-        else:
-            queryset = queryset.none()
-
-        return Response(CustomerSerializer(queryset, many=True).data)
-
-
 @extend_schema_view(
     get=extend_schema(tags=["Customers & Contacts"]),
     patch=extend_schema(tags=["Customers & Contacts"], request=CustomerUpdateSerializer),
