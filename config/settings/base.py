@@ -114,6 +114,21 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
+# Backs DRF's rate-limiting throttle classes (apps/core/throttling.py,
+# 06-architecture.md §5). Must be a real shared cache, not Django's
+# default LocMemCache, since `web` scales horizontally (06-architecture.md
+# §6) — an in-process cache would let each worker enforce its own
+# separate limit. Reuses the same Redis instance already used for the
+# JWT blocklist/idempotency/dashboard cache; key namespaces never
+# collide since those use the raw redis client with their own prefixes,
+# not Django's cache framework.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+    }
+}
+
 JWT_ACCESS_TOKEN_LIFETIME_MINUTES = int(
     os.environ.get("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", 15)
 )
