@@ -21,6 +21,7 @@ from apps.accounts.serializers import (
 from apps.accounts.tokens import RefreshToken
 from apps.organizations.services import SignupService
 from apps.organizations.models import Membership
+from apps.core.throttling import LoginRateThrottle, PasswordResetRequestThrottle
 
 
 @extend_schema_view(post=extend_schema(tags=["Auth"], request=LogoutSerializer))
@@ -46,6 +47,7 @@ class LogoutView(APIView):
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [LoginRateThrottle]
 
 
 @extend_schema_view(post=extend_schema(tags=["Auth"], request=SignupSerializer))
@@ -84,6 +86,7 @@ class EmailVerifyView(APIView):
 @extend_schema_view(post=extend_schema(tags=["Auth"], request=PasswordResetRequestSerializer))
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [PasswordResetRequestThrottle]
 
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)

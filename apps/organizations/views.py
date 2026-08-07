@@ -17,6 +17,7 @@ from apps.organizations.serializers import (
 )
 from apps.organizations.services import InvitationService, MembershipService
 from apps.core.permissions import RoleMatrixPermission, SCOPE_FULL, SCOPE_NONE, SCOPE_READONLY_ORG
+from apps.core.throttling import InvitationAcceptThrottle
 from apps.organizations.models import Invitation, Membership, MembershipRole
 
 
@@ -108,6 +109,7 @@ class MembershipDetailView(OrgScopedViewSetMixin, APIView):
 
 class InvitationAcceptView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [InvitationAcceptThrottle]
 
     @extend_schema(tags=["Auth"], request=AcceptInvitationSerializer, responses={200: dict})
     def post(self, request, token):
