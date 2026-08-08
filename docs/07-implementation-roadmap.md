@@ -151,7 +151,7 @@ already-known items are:
       (06-architecture.md §5)
 - [x] Production Docker Compose / deployment config finalized
       (06-architecture.md §6)
-- [ ] Index/query performance pass against the indexes already
+- [x] Index/query performance pass against the indexes already
       defined in 04-erd.md — confirm they're actually being used
       (`EXPLAIN ANALYZE` on the heaviest list endpoints)
 - [ ] Basic observability wiring (06-architecture.md §7): request
