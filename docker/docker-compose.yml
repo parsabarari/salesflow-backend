@@ -6,6 +6,8 @@
 # equivalent"); production points django-storages at real AWS S3 instead
 # via the .env values, same codebase, no compose file change needed.
 
+name: salesflow-dev
+
 services:
   postgres:
     image: postgres:16
@@ -69,7 +71,7 @@ services:
       dockerfile: docker/Dockerfile
       args:
         REQUIREMENTS_FILE: requirements/dev.txt
-    command: celery -A config worker -l info
+    command: celery -A config.celery:app worker -l info
     env_file: ../.env
     volumes:
       - ..:/app
@@ -85,7 +87,7 @@ services:
       dockerfile: docker/Dockerfile
       args:
         REQUIREMENTS_FILE: requirements/dev.txt
-    command: celery -A config beat -l info
+    command: celery -A config.celery:app beat -l info
     env_file: ../.env
     volumes:
       - ..:/app

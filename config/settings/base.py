@@ -11,7 +11,11 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = False
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split()
+# .env(.example) defines ALLOWED_HOSTS (comma-separated) — previously
+# this read the wrong var name (DJANGO_ALLOWED_HOSTS) and split on
+# whitespace instead of commas, so the value in .env never actually
+# reached Django. Fixed to match what .env.example actually defines.
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -72,6 +76,12 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
+# Destination for `collectstatic` — required by Django's staticfiles
+# app whenever DEBUG=False (dev's runserver serves STATICFILES_DIRS
+# directly and never needed this, which is why the gap wasn't caught
+# until now, under prod settings).
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
@@ -80,7 +90,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DB", "salesflow"),
         "USER": os.environ.get("POSTGRES_USER", "postgres"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "password"),
         "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
