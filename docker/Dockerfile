@@ -23,6 +23,9 @@ RUN pip install -r ${REQUIREMENTS_FILE}
 
 COPY . .
 
+RUN chmod +x docker/entrypoint.sh
+ENTRYPOINT ["docker/entrypoint.sh"]
+
 # Default command is for the `web` service; docker-compose.yml overrides
 # this for `worker` (celery worker) and `beat` (celery beat).
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
