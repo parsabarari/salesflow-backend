@@ -147,9 +147,9 @@ This phase is inherently less specifiable in advance than 1–3 (PRD
 Section 10 groups it as post-MVP polish), but the concrete,
 already-known items are:
 
-- [ ] Rate limiting on the three unauthenticated endpoints
+- [x] Rate limiting on the three unauthenticated endpoints
       (06-architecture.md §5)
-- [ ] Production Docker Compose / deployment config finalized
+- [x] Production Docker Compose / deployment config finalized
       (06-architecture.md §6)
 - [ ] Index/query performance pass against the indexes already
       defined in 04-erd.md — confirm they're actually being used
