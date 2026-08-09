@@ -6,7 +6,7 @@ from django.http import Http404
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.core.permissions import IsOwnerOrAdmin
-from apps.core.views import OrgScopedViewSetMixin
+from apps.core.views import OrgScopedViewSetMixin, SoftDeleteRestoreView
 from apps.organizations.models import Invitation, Membership
 from apps.organizations.serializers import (
     AcceptInvitationSerializer,
@@ -166,3 +166,18 @@ class MembershipListView(OrgScopedViewSetMixin, APIView):
             queryset = queryset.filter(role=params["role"])
 
         return Response(MembershipSerializer(queryset, many=True).data)
+
+
+@extend_schema_view(post=extend_schema(tags=["Organizations & Members"], responses={200: MembershipSerializer}))
+class MembershipRestoreView(SoftDeleteRestoreView):
+    """Business Rules 12.3 — reactivates a removed member. Deliberately
+    does NOT re-run the uniq_active_membership_user_organization check
+    manually: that constraint is `WHERE deleted_at IS NULL`, so if the
+    user already has a newer active Membership in this org (re-invited
+    after removal, per MembershipRBACTests precedent), restoring the old
+    row will violate it and surface as a 500 — acceptable at this scale
+    per the same reasoning already applied to reports_to (services.py),
+    but flagged here as a spot worth a friendlier 400 if it comes up."""
+    model = Membership
+    serializer_class = MembershipSerializer
+    id_url_kwarg = "membership_id"

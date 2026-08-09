@@ -20,7 +20,7 @@ from apps.core.permissions import (
     SCOPE_READONLY_ORG,
     SCOPE_TEAM,
 )
-from apps.core.views import OrgScopedViewSetMixin
+from apps.core.views import OrgScopedViewSetMixin, SoftDeleteRestoreView
 from apps.core.viewsets import RoleScopedQuerysetMixin
 from apps.organizations.models import Membership, MembershipRole
 
@@ -195,3 +195,10 @@ class ActivityDetailView(OrgScopedViewSetMixin, ActivityObjectLookupMixin, APIVi
         activity = self._get_object(activity_id)
         activity.delete()  # soft delete (SoftDeleteModel.delete())
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema_view(post=extend_schema(tags=["Activities"]))
+class ActivityRestoreView(SoftDeleteRestoreView):
+    model = Activity
+    serializer_class = ActivitySerializer
+    id_url_kwarg = "activity_id"

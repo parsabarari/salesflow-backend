@@ -21,6 +21,7 @@ from apps.leads.serializers import (LeadCreateSerializer, LeadSerializer,
 from apps.leads.services import (LeadDuplicateService, LeadService,
                                  LeadStageTransitionService, LeadTimelineService,
                                  TagService, assert_can_assign_owner,)
+from apps.core.views import SoftDeleteRestoreView
 from apps.organizations.models import Membership, MembershipRole
 from apps.customers.services import CustomerService
 from apps.notifications.models import NotificationType
@@ -326,3 +327,17 @@ class LeadListCreateView(OrgScopedViewSetMixin, RoleScopedQuerysetMixin, APIView
         response_data = LeadSerializer(lead).data
         response_data["possible_duplicates"] = possible_duplicates  # Business Rules 4.3
         return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+@extend_schema_view(post=extend_schema(tags=["Leads"]))
+class LeadRestoreView(SoftDeleteRestoreView):
+    model = Lead
+    serializer_class = LeadSerializer
+    id_url_kwarg = "lead_id"
+
+
+@extend_schema_view(post=extend_schema(tags=["Leads"]))
+class TagRestoreView(SoftDeleteRestoreView):
+    model = Tag
+    serializer_class = TagSerializer
+    id_url_kwarg = "tag_id"
