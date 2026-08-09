@@ -154,7 +154,7 @@ already-known items are:
 - [x] Index/query performance pass against the indexes already
       defined in 04-erd.md — confirm they're actually being used
       (`EXPLAIN ANALYZE` on the heaviest list endpoints)
-- [ ] Basic observability wiring (06-architecture.md §7): request
+- [x] Basic observability wiring (06-architecture.md §7): request
       logging, Celery failure visibility
 - [ ] Soft-delete restore endpoints exercised end-to-end for every
       entity that needs them (Business Rules 12.3)
