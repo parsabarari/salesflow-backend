@@ -156,7 +156,7 @@ already-known items are:
       (`EXPLAIN ANALYZE` on the heaviest list endpoints)
 - [x] Basic observability wiring (06-architecture.md §7): request
       logging, Celery failure visibility
-- [ ] Soft-delete restore endpoints exercised end-to-end for every
+- [x] Soft-delete restore endpoints exercised end-to-end for every
       entity that needs them (Business Rules 12.3)
 
 ---
