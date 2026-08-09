@@ -40,3 +40,36 @@ if not ALLOWED_HOSTS:
         "ALLOWED_HOSTS=api.example.com in .env) — refusing to start with "
         "an empty allowlist."
     )
+
+
+# --- Observability (docs/06-architecture.md §7) ---
+# Structured JSON request/task logs — python-json-logger is pinned in
+# requirements/prod.txt specifically for this. Not enabled in dev
+# (config/settings/dev.py) since that dependency isn't installed there
+# and dev's default human-readable console logging is more convenient
+# for local work anyway.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "apps": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "celery": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}
