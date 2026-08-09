@@ -17,7 +17,7 @@ from apps.collaboration.services import (
 )
 from apps.core.permissions import SCOPE_NONE, SCOPE_READONLY_ORG, get_active_membership
 from apps.core.services import resolve_polymorphic_parent
-from apps.core.views import OrgScopedViewSetMixin
+from apps.core.views import OrgScopedViewSetMixin, SoftDeleteRestoreView
 from apps.organizations.models import MembershipRole
 
 
@@ -214,3 +214,17 @@ class AttachmentDetailView(OrgScopedViewSetMixin, APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
         attachment.delete()  # soft delete
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema_view(post=extend_schema(tags=["Collaboration"]))
+class CommentRestoreView(SoftDeleteRestoreView):
+    model = Comment
+    serializer_class = CommentSerializer
+    id_url_kwarg = "comment_id"
+
+
+@extend_schema_view(post=extend_schema(tags=["Collaboration"]))
+class AttachmentRestoreView(SoftDeleteRestoreView):
+    model = Attachment
+    serializer_class = AttachmentSerializer
+    id_url_kwarg = "attachment_id"

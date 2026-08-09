@@ -1,11 +1,8 @@
 from django.urls import path
 
 from apps.organizations.views import (
-    InvitationAcceptView,
-    InvitationListCreateView,
-    InvitationResendView,
-    MembershipDetailView,
-    MembershipListView,
+    InvitationAcceptView, InvitationListCreateView, InvitationResendView,
+    MembershipDetailView, MembershipListView, MembershipRestoreView,
 )
 
 urlpatterns = [
@@ -13,4 +10,5 @@ urlpatterns = [
     path("<int:organization_id>/invitations/<int:invitation_id>/resend/", InvitationResendView.as_view(), name="invitation-resend"),
     path("<int:organization_id>/memberships/", MembershipListView.as_view(), name="membership-list"),
     path("<int:organization_id>/memberships/<int:membership_id>/", MembershipDetailView.as_view(), name="membership-detail"),
+    path("<int:organization_id>/memberships/<int:membership_id>/restore/", MembershipRestoreView.as_view(), name="membership-restore"),
 ]

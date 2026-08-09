@@ -8,7 +8,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from apps.core.permissions import (
     RoleMatrixPermission, SCOPE_FULL, SCOPE_NONE, SCOPE_READONLY_ORG, SCOPE_TEAM,
 )
-from apps.core.views import OrgScopedViewSetMixin
+from apps.core.views import OrgScopedViewSetMixin, SoftDeleteRestoreView
 from apps.core.viewsets import RoleScopedQuerysetMixin
 from apps.customers.models import Contact
 from apps.organizations.models import Membership, MembershipRole
@@ -200,3 +200,10 @@ class TicketDetailView(OrgScopedViewSetMixin, TicketObjectLookupMixin, APIView):
         ticket = self._get_object(ticket_id)
         ticket.delete()  # soft delete
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema_view(post=extend_schema(tags=["Tickets"]))
+class TicketRestoreView(SoftDeleteRestoreView):
+    model = Ticket
+    serializer_class = TicketSerializer
+    id_url_kwarg = "ticket_id"

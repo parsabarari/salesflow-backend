@@ -11,6 +11,7 @@ from apps.core.permissions import (
     RoleMatrixPermission, SCOPE_FULL, SCOPE_NONE, SCOPE_OWN, SCOPE_READONLY_ORG, SCOPE_TEAM,
 )
 from apps.core.views import OrgScopedViewSetMixin
+from apps.core.views import SoftDeleteRestoreView
 from apps.customers.models import Contact, Customer
 from apps.customers.serializers import (
     ContactCreateSerializer, ContactSerializer, CustomerSerializer, CustomerUpdateSerializer,
@@ -177,3 +178,17 @@ class CustomerListView(OrgScopedViewSetMixin, APIView):
             queryset = queryset.filter(Q(name__icontains=search) | Q(email__icontains=search))
 
         return Response(CustomerSerializer(queryset, many=True).data)
+
+
+@extend_schema_view(post=extend_schema(tags=["Customers & Contacts"]))
+class CustomerRestoreView(SoftDeleteRestoreView):
+    model = Customer
+    serializer_class = CustomerSerializer
+    id_url_kwarg = "customer_id"
+
+
+@extend_schema_view(post=extend_schema(tags=["Customers & Contacts"]))
+class ContactRestoreView(SoftDeleteRestoreView):
+    model = Contact
+    serializer_class = ContactSerializer
+    id_url_kwarg = "contact_id"
