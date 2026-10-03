@@ -67,7 +67,7 @@ Built in phases per `docs/07-implementation-roadmap.md`:
 - ✅ **Phase 1** — Auth, Organizations, RBAC, Leads & Pipeline
 - ✅ **Phase 2** — Customers, Activities, Ticketing, Collaboration (Comments + mentions)
 - ✅ **Phase 3** — Dashboard, Search, Notifications, Audit Log
-- ⬜ **Phase 4** — Rate limiting, deployment hardening, performance pass, observability, soft-delete restore endpoints
+- ✅ **Phase 4** — Rate limiting, deployment hardening, performance pass, observability, soft-delete restore endpoints
 
 Known open items: `?include_archived=true` list filter is deferred; a handful of judgment calls made during implementation (documented inline in code comments) are pending write-up into `docs/02-business-rules.md` by the project owner.
 
